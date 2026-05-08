@@ -9,11 +9,13 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "airtable": "^0.12.2",
     "bcryptjs": "^3.0.3",
     "next": "14.2.35",
     "next-auth": "5.0.0-beta.31",
     "react": "^18",
-    "react-dom": "^18"
+    "react-dom": "^18",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/bcryptjs": "^3.0.0",

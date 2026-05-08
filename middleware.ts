@@ -4,7 +4,11 @@ import { NextResponse } from "next/server"
 export default auth((req) => {
   const { pathname } = req.nextUrl
 
-  if (pathname === "/login" || pathname.startsWith("/api/auth/")) {
+  if (
+    pathname === "/login" ||
+    pathname.startsWith("/api/auth/") ||
+    pathname === "/api/health"
+  ) {
     return NextResponse.next()
   }
 
