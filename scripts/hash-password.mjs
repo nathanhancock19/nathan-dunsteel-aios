@@ -1,5 +1,9 @@
 // Usage: node scripts/hash-password.mjs "<your password>"
-// Prints a bcrypt hash to copy into .env.local as AIOS_USER_PASSWORD_HASH.
+// Prints a bcrypt hash with $ characters escaped, ready to paste into
+// .env.local as: AIOS_USER_PASSWORD_HASH=<output>
+// The escaping is required because Next.js's @next/env runs dotenv-expand,
+// which would otherwise interpret the bcrypt $-prefixed segments as variable
+// references and silently drop them.
 
 import bcrypt from "bcryptjs"
 
@@ -10,4 +14,5 @@ if (!password) {
 }
 
 const hash = await bcrypt.hash(password, 12)
-console.log(hash)
+const escaped = hash.replaceAll("$", "\\$")
+console.log(escaped)
