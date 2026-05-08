@@ -13,9 +13,9 @@ let _client: Client | null = null
 
 function getClient(): Client {
   if (_client) return _client
-  const token = process.env.NOTION_SITE_DIARY_API_KEY ?? process.env.NOTION_API_KEY
+  const token = process.env.NOTION_API_KEY
   if (!token) {
-    throw new Error("Notion env vars not set: NOTION_API_KEY or NOTION_SITE_DIARY_API_KEY")
+    throw new Error("NOTION_API_KEY not set")
   }
   _client = new Client({ auth: token })
   return _client

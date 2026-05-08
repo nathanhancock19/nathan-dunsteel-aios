@@ -10,10 +10,7 @@ import type { DayDocketFields } from "./types"
 import type { Record as AirtableRecord, FieldSet } from "airtable"
 
 function todayISO(): string {
-  // Local-date YYYY-MM-DD. Airtable stores docket Date as a date-only string.
-  const d = new Date()
-  const tz = d.getTimezoneOffset() * 60000
-  return new Date(d.getTime() - tz).toISOString().slice(0, 10)
+  return new Date().toLocaleDateString("en-CA", { timeZone: "Australia/Sydney" })
 }
 
 /**

@@ -22,7 +22,9 @@ export function POCard({ item, onApprove, onQuery }: Props) {
 
   const status = col(item, "status")
   const date = col(item, "date__1")
-  const supplier = col(item, "single_select")
+  const costCode = col(item, "single_select")
+  const jobScope = col(item, "multi_select6")
+  const invoiceUrl = item.column_values.find((c) => c.id === "upload_file")?.text ?? ""
 
   const act = async (key: "approve" | "query", fn: () => Promise<void>) => {
     setLoading(key)
@@ -56,9 +58,34 @@ export function POCard({ item, onApprove, onQuery }: Props) {
         )}
       </div>
 
-      <div className="mb-3 flex gap-3 text-xs text-neutral-500">
-        {supplier && <span>{supplier}</span>}
-        {date && <span>{date}</span>}
+      <div className="mb-3 space-y-0.5 text-xs text-neutral-500">
+        {jobScope && (
+          <p>
+            <span className="text-neutral-600">Job/Scope:</span> {jobScope}
+          </p>
+        )}
+        {costCode && (
+          <p>
+            <span className="text-neutral-600">Cost Code:</span> {costCode}
+          </p>
+        )}
+        {date && (
+          <p>
+            <span className="text-neutral-600">Invoice Date:</span> {date}
+          </p>
+        )}
+        {invoiceUrl && invoiceUrl.startsWith("http") && (
+          <p>
+            <a
+              href={invoiceUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="text-orange-500 hover:text-orange-400"
+            >
+              View invoice PDF
+            </a>
+          </p>
+        )}
       </div>
 
       {error && <p className="mb-2 text-xs text-red-400">{error}</p>}

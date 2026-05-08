@@ -8,10 +8,6 @@
  *
  * We forward-fill the month band, locate the column for a given date,
  * then read each Job block's attribute rows at that column.
- *
- * Source-of-truth status: this is INTERIM. The spec migrates Deliveries to
- * Airtable. Drop this module when AIOS_PRIMARY_PROJECT's Deliveries table
- * is populated.
  */
 
 import { parse } from "csv-parse/sync"
@@ -93,7 +89,7 @@ function findColumnForDate(
   const dateRow = rows[3] ?? []
   const dayRow = rows[4] ?? []
   const filledMonths = forwardFillMonths(monthRow)
-  const target = new Date(isoDate)
+  const target = new Date(isoDate + "T12:00:00") // use noon to avoid DST edge cases
   if (Number.isNaN(target.getTime())) return null
   const wantedMonth = MONTH_NAMES[target.getMonth()]
   const wantedDay = String(target.getDate())
@@ -113,32 +109,11 @@ function findColumnForDate(
   return null
 }
 
-function todayISO(): string {
-  const d = new Date()
-  const tz = d.getTimezoneOffset() * 60000
-  return new Date(d.getTime() - tz).toISOString().slice(0, 10)
-}
-
-/**
- * Fetch deliveries scheduled for the given date. Optionally filter to a
- * project number (e.g., "411") which will keep only Job blocks whose Project
- * cell contains that number.
- */
-export async function getDeliveriesForDay(opts?: {
-  date?: string
-  projectFilter?: string
-  sheetId?: string
-}): Promise<DeliveriesForDay> {
-  const date = opts?.date ?? todayISO()
-  const sheetId = opts?.sheetId ?? process.env.DELIVERY_SCHEDULE_SHEET_ID ?? DEFAULT_SHEET_ID
-
-  const rows = await fetchCsv(sheetId)
-  const located = findColumnForDate(rows, date)
-  if (!located) {
-    return { date, monthLabel: "", dayName: "", jobs: [] }
-  }
-  const { colIdx, monthLabel, dayName } = located
-
+function extractJobsForColumn(
+  rows: string[][],
+  colIdx: number,
+  projectFilter?: string,
+): DeliveryJob[] {
   const jobs: DeliveryJob[] = []
   let current: DeliveryJob | null = null
   for (const row of rows) {
@@ -146,11 +121,7 @@ export async function getDeliveriesForDay(opts?: {
     const jobMatch = label.match(/^Job\s+(\d+)/i)
     if (jobMatch) {
       if (current && (current.project || current.details)) jobs.push(current)
-      current = {
-        jobIndex: Number(jobMatch[1]),
-        project: "",
-        details: "",
-      }
+      current = { jobIndex: Number(jobMatch[1]), project: "", details: "" }
       continue
     }
     if (!current) continue
@@ -163,9 +134,63 @@ export async function getDeliveriesForDay(opts?: {
   if (current && (current.project || current.details)) jobs.push(current)
 
   let filtered = jobs.filter((j) => j.project || j.details)
-  if (opts?.projectFilter) {
-    const needle = opts.projectFilter.toLowerCase()
+  if (projectFilter) {
+    const needle = projectFilter.toLowerCase()
     filtered = filtered.filter((j) => j.project.toLowerCase().includes(needle))
   }
-  return { date, monthLabel, dayName, jobs: filtered }
+  return filtered
+}
+
+function todayISO(): string {
+  return new Date().toLocaleDateString("en-CA", { timeZone: "Australia/Sydney" })
+}
+
+/**
+ * Fetch deliveries scheduled for the given date. Optionally filter to a
+ * project number (e.g., "411").
+ */
+export async function getDeliveriesForDay(opts?: {
+  date?: string
+  projectFilter?: string
+  sheetId?: string
+}): Promise<DeliveriesForDay> {
+  const date = opts?.date ?? todayISO()
+  const sheetId = opts?.sheetId ?? process.env.DELIVERY_SCHEDULE_SHEET_ID ?? DEFAULT_SHEET_ID
+  const rows = await fetchCsv(sheetId)
+  const located = findColumnForDate(rows, date)
+  if (!located) return { date, monthLabel: "", dayName: "", jobs: [] }
+  const { colIdx, monthLabel, dayName } = located
+  const jobs = extractJobsForColumn(rows, colIdx, opts?.projectFilter)
+  return { date, monthLabel, dayName, jobs }
+}
+
+/**
+ * Fetch deliveries for today + next 6 days (7 days total). Fetches the sheet
+ * once and extracts each date column. Days with no deliveries are included
+ * with an empty jobs array so callers can show a full week view.
+ */
+export async function getDeliveriesForWeek(opts?: {
+  projectFilter?: string
+  sheetId?: string
+}): Promise<DeliveriesForDay[]> {
+  const sheetId = opts?.sheetId ?? process.env.DELIVERY_SCHEDULE_SHEET_ID ?? DEFAULT_SHEET_ID
+  const rows = await fetchCsv(sheetId)
+  const results: DeliveriesForDay[] = []
+
+  const now = new Date()
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(now)
+    d.setDate(now.getDate() + i)
+    const date = d.toLocaleDateString("en-CA", { timeZone: "Australia/Sydney" })
+    const located = findColumnForDate(rows, date)
+    if (!located) {
+      results.push({ date, monthLabel: "", dayName: "", jobs: [] })
+      continue
+    }
+    const { colIdx, monthLabel, dayName } = located
+    const jobs = extractJobsForColumn(rows, colIdx, opts?.projectFilter)
+    results.push({ date, monthLabel, dayName, jobs })
+  }
+
+  return results
 }
