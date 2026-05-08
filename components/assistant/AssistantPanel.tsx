@@ -1,6 +1,8 @@
 "use client"
 
 import { FormEvent, useEffect, useRef, useState } from "react"
+import ReactMarkdown from "react-markdown"
+import remarkGfm from "remark-gfm"
 
 type Message = { role: "user" | "assistant"; content: string }
 
@@ -179,7 +181,17 @@ export function AssistantPanel() {
                     : "mr-6 bg-neutral-900 text-neutral-200"
                 }`}
               >
-                {m.content || (pending && i === messages.length - 1 ? "..." : "")}
+                {m.role === "assistant" ? (
+                  m.content ? (
+                    <div className="prose prose-sm prose-invert max-w-none prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0 prose-headings:my-2 prose-table:my-2 prose-code:rounded prose-code:bg-neutral-800 prose-code:px-1 prose-code:text-xs">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>{m.content}</ReactMarkdown>
+                    </div>
+                  ) : pending && i === messages.length - 1 ? (
+                    <span className="text-neutral-500">...</span>
+                  ) : null
+                ) : (
+                  m.content
+                )}
               </div>
             ))}
 

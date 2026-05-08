@@ -10,6 +10,8 @@
 import { z } from "zod"
 import { listRecords, TABLES } from "@/lib/airtable"
 import { getTodayDockets } from "@/lib/airtable"
+import { getDeliveriesForDay } from "@/lib/sheets/deliveries"
+import { getProjectForecast } from "@/lib/notion/forecast"
 import type Anthropic from "@anthropic-ai/sdk"
 
 type ToolDefinition = Anthropic.Tool
@@ -33,7 +35,40 @@ export const queryProjectsSchema = z.object({
 
 export const todaySiteActivitySchema = z.object({})
 
+export const queryDeliveriesSchema = z.object({
+  date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional()
+    .describe("YYYY-MM-DD. Defaults to today."),
+})
+
 export const tools: ToolDefinition[] = [
+  {
+    name: "get_project_forecast",
+    description:
+      "Read Nathan's Project Forecast Notion table. The forecast is updated weekly and lists upcoming work for the project: dates, scope, status. Use this for questions about upcoming work, what's planned next week, project schedule, or remaining milestones.",
+    input_schema: {
+      type: "object",
+      properties: {},
+      required: [],
+    } as Anthropic.Tool["input_schema"],
+  },
+  {
+    name: "query_deliveries",
+    description:
+      "Get the delivery schedule for a given day from the Dunsteel Google Sheets delivery tracker. Returns up to 5 jobs (project, details, truck, time, signed status, PM). Scoped to the user's primary project. Use this when the user asks about deliveries, what's coming on a date, or what's scheduled.",
+    input_schema: {
+      type: "object",
+      properties: {
+        date: {
+          type: "string",
+          description: "Filter to a specific date in YYYY-MM-DD format. Omit for today.",
+        },
+      },
+      required: [],
+    } as Anthropic.Tool["input_schema"],
+  },
   {
     name: "today_site_activity",
     description:
@@ -95,6 +130,40 @@ type ToolResult =
 
 export async function runTool(name: string, input: unknown): Promise<ToolResult> {
   try {
+    if (name === "get_project_forecast") {
+      const forecast = await getProjectForecast()
+      if (!forecast) {
+        return { ok: false, error: "NOTION_FORECAST_PAGE_ID not set" }
+      }
+      return { ok: true, data: forecast }
+    }
+
+    if (name === "query_deliveries") {
+      const args = queryDeliveriesSchema.parse(input)
+      const result = await getDeliveriesForDay({
+        date: args.date,
+        projectFilter: projectScope(),
+      })
+      return {
+        ok: true,
+        data: {
+          date: result.date,
+          dayName: result.dayName,
+          monthLabel: result.monthLabel,
+          count: result.jobs.length,
+          jobs: result.jobs.map((j) => ({
+            project: j.project || null,
+            details: j.details,
+            truck: j.truck ?? null,
+            time: j.time ?? null,
+            pm: j.pm ?? null,
+            signed: j.signedDocket ?? null,
+            status: j.status ?? null,
+          })),
+        },
+      }
+    }
+
     if (name === "today_site_activity") {
       const dockets = await getTodayDockets()
       return {

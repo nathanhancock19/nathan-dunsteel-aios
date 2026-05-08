@@ -4,7 +4,8 @@ import { TodayBar } from "@/components/dashboard/TodayBar"
 import { SiteActivityCard } from "@/components/dashboard/SiteActivityCard"
 import { POApprovalsCard } from "@/components/dashboard/POApprovalsCard"
 import { SiteDiaryCard } from "@/components/dashboard/SiteDiaryCard"
-import { Card, ConfigState } from "@/components/dashboard/Card"
+import { DeliveriesCard } from "@/components/dashboard/DeliveriesCard"
+import { Card } from "@/components/dashboard/Card"
 
 export const dynamic = "force-dynamic"
 
@@ -45,16 +46,6 @@ function Skeleton({ title }: { title: string }) {
   return (
     <Card title={title}>
       <div className="h-12 animate-pulse rounded bg-neutral-800/60" />
-    </Card>
-  )
-}
-
-function DeliveriesCard() {
-  // Deliveries widget needs the AIOS-owned Deliveries Airtable table, which
-  // does not exist yet. Surface a clear placeholder until then.
-  return (
-    <Card title="Deliveries today">
-      <ConfigState envVar="Airtable Deliveries table (Section 5 of spec)" />
     </Card>
   )
 }
