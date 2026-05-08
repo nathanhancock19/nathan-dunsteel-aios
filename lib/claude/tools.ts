@@ -12,6 +12,9 @@ import { listRecords, TABLES } from "@/lib/airtable"
 import { getTodayDockets } from "@/lib/airtable"
 import { getDeliveriesForDay } from "@/lib/sheets/deliveries"
 import { getProjectForecast } from "@/lib/notion/forecast"
+import { changeColumnValue } from "@/lib/monday"
+import { logDecision } from "@/lib/decisions/log"
+import { runInbox } from "@/lib/inbox"
 import type Anthropic from "@anthropic-ai/sdk"
 
 type ToolDefinition = Anthropic.Tool
@@ -41,6 +44,30 @@ export const queryDeliveriesSchema = z.object({
     .regex(/^\d{4}-\d{2}-\d{2}$/)
     .optional()
     .describe("YYYY-MM-DD. Defaults to today."),
+})
+
+export const approvePOSchema = z.object({
+  itemId: z.string().min(1).describe("Monday item id of the PO."),
+  name: z.string().optional().describe("Display name of the PO for the Telegram notification."),
+  jobScopeId: z.number().int().optional().describe("Optional dropdown label id for Job/Scope."),
+  costCodeLabel: z.string().optional().describe("Optional status label for Cost Code."),
+  confirmed: z.literal(true).describe("Caller has confirmed with the user before invoking. Always set to true."),
+})
+
+export const allocatePOSchema = z.object({
+  itemId: z.string().min(1),
+  jobScopeId: z.number().int().optional(),
+  costCodeLabel: z.string().optional(),
+  confirmed: z.literal(true),
+})
+
+export const logDecisionSchema = z.object({
+  category: z
+    .string()
+    .min(1)
+    .describe("e.g. 'note', 'commitment', 'reminder'. Use 'note' as default."),
+  subject: z.string().optional().describe("Person or project this decision is about, if applicable."),
+  body: z.string().min(1).describe("Free-form text describing what happened or what was decided."),
 })
 
 export const tools: ToolDefinition[] = [
@@ -120,6 +147,79 @@ export const tools: ToolDefinition[] = [
         },
       },
       required: [],
+    } as Anthropic.Tool["input_schema"],
+  },
+  {
+    name: "query_inbox",
+    description:
+      "Read the current inbox (what needs Nathan today). Returns each item's source, urgency, title and context. Use this when the user asks 'what's outstanding', 'what's pending today', or wants you to triage a batch of items.",
+    input_schema: {
+      type: "object",
+      properties: {},
+      required: [],
+    } as Anthropic.Tool["input_schema"],
+  },
+  {
+    name: "monday_approve_po",
+    description:
+      "Approve a PO on the Monday board, optionally setting Job/Scope and Cost Code at the same time. WRITE TOOL: only invoke after the user has explicitly confirmed (e.g. 'yes', 'go ahead', 'approve it'). Echo back the supplier name, allocation, and ask 'approve now?' before calling. Always pass confirmed: true.",
+    input_schema: {
+      type: "object",
+      properties: {
+        itemId: { type: "string", description: "Monday item id of the PO." },
+        name: { type: "string", description: "PO display name for the Telegram log." },
+        jobScopeId: {
+          type: "integer",
+          description: "Optional dropdown label id for Job/Scope (multi_select6).",
+        },
+        costCodeLabel: {
+          type: "string",
+          description: "Optional status label for Cost Code (single_select).",
+        },
+        confirmed: {
+          type: "boolean",
+          description: "Always true. The caller (you) is confirming the user has approved this write.",
+        },
+      },
+      required: ["itemId", "confirmed"],
+    } as Anthropic.Tool["input_schema"],
+  },
+  {
+    name: "monday_set_po_allocation",
+    description:
+      "Set Job/Scope and/or Cost Code on a PO without flipping its status. WRITE TOOL: confirm with the user before calling. Useful when Nathan wants to allocate a PO but isn't ready to approve it yet.",
+    input_schema: {
+      type: "object",
+      properties: {
+        itemId: { type: "string" },
+        jobScopeId: { type: "integer" },
+        costCodeLabel: { type: "string" },
+        confirmed: { type: "boolean" },
+      },
+      required: ["itemId", "confirmed"],
+    } as Anthropic.Tool["input_schema"],
+  },
+  {
+    name: "aios_log_decision",
+    description:
+      "Append a free-form note or commitment to the AIOS decision log. Use this when Nathan says 'remind me later that ...' or 'note that I decided to ...'. WRITE TOOL but low-risk: stores in our own database, no external side effects.",
+    input_schema: {
+      type: "object",
+      properties: {
+        category: {
+          type: "string",
+          description: "Short category, e.g. 'note', 'commitment', 'reminder'.",
+        },
+        subject: {
+          type: "string",
+          description: "Optional: who or what the decision is about.",
+        },
+        body: {
+          type: "string",
+          description: "What was decided or noted.",
+        },
+      },
+      required: ["category", "body"],
     } as Anthropic.Tool["input_schema"],
   },
 ]
@@ -235,6 +335,116 @@ export async function runTool(name: string, input: unknown): Promise<ToolResult>
             : String(r.fields["PM Assigned"] ?? ""),
         })),
       }
+    }
+
+    if (name === "query_inbox") {
+      const items = await runInbox()
+      return {
+        ok: true,
+        data: items.map((i) => ({
+          id: i.id,
+          source: i.source,
+          urgency: i.urgency,
+          title: i.title,
+          context: i.context,
+        })),
+      }
+    }
+
+    if (name === "monday_approve_po") {
+      const args = approvePOSchema.parse(input)
+      const boardId = process.env.MONDAY_PO_BOARD_ID
+      if (!boardId) return { ok: false, error: "MONDAY_PO_BOARD_ID not set" }
+
+      if (typeof args.jobScopeId === "number") {
+        await changeColumnValue({
+          boardId,
+          itemId: args.itemId,
+          columnId: "multi_select6",
+          value: JSON.stringify({ ids: [args.jobScopeId] }),
+        })
+      }
+      if (args.costCodeLabel) {
+        await changeColumnValue({
+          boardId,
+          itemId: args.itemId,
+          columnId: "single_select",
+          value: JSON.stringify({ label: args.costCodeLabel }),
+        })
+      }
+      await changeColumnValue({
+        boardId,
+        itemId: args.itemId,
+        columnId: "status",
+        value: JSON.stringify({ label: "Approved" }),
+      })
+
+      await logDecision({
+        actor: "assistant",
+        category: "po-approval",
+        subject: args.name ?? args.itemId,
+        body: {
+          itemId: args.itemId,
+          jobScopeId: args.jobScopeId ?? null,
+          costCodeLabel: args.costCodeLabel ?? null,
+        },
+        sourceId: args.itemId,
+      })
+
+      return { ok: true, data: { approved: true, itemId: args.itemId } }
+    }
+
+    if (name === "monday_set_po_allocation") {
+      const args = allocatePOSchema.parse(input)
+      const boardId = process.env.MONDAY_PO_BOARD_ID
+      if (!boardId) return { ok: false, error: "MONDAY_PO_BOARD_ID not set" }
+
+      const writes: string[] = []
+      if (typeof args.jobScopeId === "number") {
+        await changeColumnValue({
+          boardId,
+          itemId: args.itemId,
+          columnId: "multi_select6",
+          value: JSON.stringify({ ids: [args.jobScopeId] }),
+        })
+        writes.push("jobScope")
+      }
+      if (args.costCodeLabel) {
+        await changeColumnValue({
+          boardId,
+          itemId: args.itemId,
+          columnId: "single_select",
+          value: JSON.stringify({ label: args.costCodeLabel }),
+        })
+        writes.push("costCode")
+      }
+
+      await logDecision({
+        actor: "assistant",
+        category: "po-allocation",
+        subject: args.itemId,
+        body: {
+          itemId: args.itemId,
+          jobScopeId: args.jobScopeId ?? null,
+          costCodeLabel: args.costCodeLabel ?? null,
+        },
+        sourceId: args.itemId,
+      })
+
+      return { ok: true, data: { allocated: writes, itemId: args.itemId } }
+    }
+
+    if (name === "aios_log_decision") {
+      const args = logDecisionSchema.parse(input)
+      const result = await logDecision({
+        actor: "assistant",
+        category: args.category,
+        subject: args.subject,
+        body: { text: args.body },
+      })
+      return result.ok
+        ? { ok: true, data: { logged: true } }
+        : { ok: false, error: "Decision log not configured (POSTGRES_URL missing)" }
     }
 
     return { ok: false, error: `Unknown tool: ${name}` }

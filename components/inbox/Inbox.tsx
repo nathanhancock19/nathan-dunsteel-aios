@@ -39,7 +39,8 @@ export function Inbox() {
     }
   }, [refreshTick])
 
-  // Apply per-device state.
+  // Apply per-device state. stateTick is the manual signal to re-read
+  // localStorage after a snooze/done/waiting action.
   const visible = useMemo(() => {
     if (!items) return []
     const states = getAllStates()
@@ -47,6 +48,7 @@ export function Inbox() {
       const s = states[i.id] ?? { kind: "new" as const }
       return isVisible(s)
     })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items, stateTick])
 
   // Group by urgency.

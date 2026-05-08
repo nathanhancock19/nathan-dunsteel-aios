@@ -13,6 +13,8 @@
 import { auth } from "@/lib/auth"
 import { getClaude, SYSTEM_PROMPT, ASSISTANT_MODEL, ASSISTANT_MAX_TOKENS, ASSISTANT_TEMPERATURE } from "@/lib/claude/client"
 import { tools, runTool } from "@/lib/claude/tools"
+import { runInbox } from "@/lib/inbox"
+import { recentDecisions } from "@/lib/decisions/log"
 import type Anthropic from "@anthropic-ai/sdk"
 
 export const runtime = "nodejs"
@@ -49,6 +51,14 @@ export async function POST(req: Request) {
       try {
         const client = getClaude()
 
+        // Build a fresh "current state" preamble each request: inbox snapshot
+        // + last 7 days of decisions. NOT cached (changes per request).
+        const [inboxItems, decisions] = await Promise.all([
+          runInbox().catch(() => []),
+          recentDecisions({ days: 7, limit: 30 }).catch(() => []),
+        ])
+        const stateBlock = buildStateBlock(inboxItems, decisions)
+
         // Tool-use loop: keep cycling until Claude returns end_turn (no more
         // tool calls). Each cycle either (a) streams text to the client or
         // (b) executes a tool and feeds the result back.
@@ -65,6 +75,10 @@ export async function POST(req: Request) {
                 type: "text",
                 text: SYSTEM_PROMPT,
                 cache_control: { type: "ephemeral" },
+              },
+              {
+                type: "text",
+                text: stateBlock,
               },
             ],
             tools: tools.map((t, i) =>
@@ -152,5 +166,47 @@ function summariseToolResult(result: { ok: boolean; data?: unknown; error?: stri
   if (data && typeof data === "object" && "count" in data) {
     return `${(data as { count: number }).count} record(s)`
   }
+  if (data && typeof data === "object" && "approved" in data) return "approved"
+  if (data && typeof data === "object" && "allocated" in data) return "allocated"
+  if (data && typeof data === "object" && "logged" in data) return "logged"
   return "ok"
+}
+
+type Decision = Awaited<ReturnType<typeof recentDecisions>>[number]
+type InboxItemBrief = Awaited<ReturnType<typeof runInbox>>[number]
+
+function buildStateBlock(inbox: InboxItemBrief[], decisions: Decision[]): string {
+  const inboxLines = inbox.length === 0
+    ? "(empty)"
+    : inbox
+        .slice(0, 12)
+        .map(
+          (i) =>
+            `- [${i.urgency}] ${i.source} :: ${i.title}${i.context ? " (" + i.context + ")" : ""} :: id=${i.id}`,
+        )
+        .join("\n")
+
+  const decisionLines = decisions.length === 0
+    ? "(none recorded - decision log may not be configured yet)"
+    : decisions
+        .slice(0, 20)
+        .map((d) => {
+          const when = d.occurredAt.slice(0, 10)
+          const subj = d.subject ? ` :: ${d.subject}` : ""
+          const summary = typeof d.body === "object" && d.body && "text" in d.body
+            ? String((d.body as { text: string }).text).slice(0, 100)
+            : JSON.stringify(d.body).slice(0, 100)
+          return `- ${when} [${d.actor}] ${d.category}${subj} :: ${summary}`
+        })
+        .join("\n")
+
+  return `Current state at request time:
+
+INBOX (top 12, prioritised now > today > this-week):
+${inboxLines}
+
+RECENT DECISIONS (last 7 days, top 20):
+${decisionLines}
+
+Use this context to answer "what's on" / "what did I do" questions directly without calling tools, when the answer is already here. Call tools only when more detail or a new action is required.`
 }

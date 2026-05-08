@@ -43,6 +43,39 @@ export function AssistantPanel() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" })
   }, [messages, pending])
 
+  // Cmd+K / Ctrl+K opens the panel and focuses the input.
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      const cmdK = (e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k"
+      if (cmdK) {
+        e.preventDefault()
+        setOpen((current) => {
+          if (!current) {
+            // focus on next tick once panel renders
+            setTimeout(() => {
+              const input = document.querySelector<HTMLInputElement>(
+                'input[data-assistant-input="true"]',
+              )
+              input?.focus()
+            }, 0)
+            return true
+          }
+          // already open: just focus input
+          const input = document.querySelector<HTMLInputElement>(
+            'input[data-assistant-input="true"]',
+          )
+          input?.focus()
+          return current
+        })
+      }
+      if (e.key === "Escape" && open) {
+        setOpen(false)
+      }
+    }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [open])
+
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
     const text = input.trim()
@@ -136,25 +169,25 @@ export function AssistantPanel() {
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        aria-label={open ? "Close AI assistant" : "Open AI assistant"}
-        className="fixed bottom-4 right-4 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-orange-500 text-neutral-950 shadow-lg transition hover:bg-orange-400"
+        aria-label={open ? "Close AI assistant" : "Open AI assistant (Cmd+K)"}
+        className="fixed bottom-4 right-4 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-signal text-ink shadow-lg transition hover:bg-signal-300"
       >
         {open ? "X" : "AI"}
       </button>
 
       {open ? (
-        <div className="fixed bottom-20 right-4 z-50 flex h-[600px] max-h-[80vh] w-[380px] max-w-[calc(100vw-2rem)] flex-col rounded-lg border border-neutral-800 bg-neutral-950 shadow-2xl">
-          <div className="flex items-center justify-between border-b border-neutral-800 px-4 py-3">
+        <div className="fixed bottom-20 right-4 z-50 flex h-[600px] max-h-[80vh] w-[380px] max-w-[calc(100vw-2rem)] flex-col rounded-lg border border-rule bg-ink shadow-2xl">
+          <div className="flex items-center justify-between border-b border-rule px-4 py-3">
             <div>
-              <h3 className="text-sm font-semibold tracking-tight">AIOS Assistant</h3>
-              <p className="text-xs text-neutral-500">
-                Ask about dockets, projects, or anything in your data.
+              <h3 className="text-sm font-semibold tracking-tight text-cream">AIOS Assistant</h3>
+              <p className="text-xs text-muted">
+                Cmd+K to open. Ask anything; confirms before any write.
               </p>
             </div>
             <button
               type="button"
               onClick={clearHistory}
-              className="text-xs text-neutral-500 hover:text-neutral-300"
+              className="text-xs text-muted hover:text-cream"
             >
               Clear
             </button>
@@ -162,12 +195,13 @@ export function AssistantPanel() {
 
           <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto px-4 py-3">
             {messages.length === 0 ? (
-              <div className="text-sm text-neutral-500">
+              <div className="text-sm text-muted">
                 <p className="mb-2">Try:</p>
-                <ul className="space-y-1 text-neutral-400">
-                  <li>- What dockets came in this week?</li>
-                  <li>- Anyone on site today?</li>
-                  <li>- What is the status of project 411?</li>
+                <ul className="space-y-1 text-cream/70">
+                  <li>- What&apos;s on the inbox right now?</li>
+                  <li>- Approve the Moss Vale Auto PO with the usual allocation</li>
+                  <li>- What did I approve for cold rolled materials last week?</li>
+                  <li>- Note that I told Mike concrete pour will be 11am Thursday</li>
                 </ul>
               </div>
             ) : null}
@@ -177,17 +211,17 @@ export function AssistantPanel() {
                 key={i}
                 className={`rounded-md px-3 py-2 text-sm ${
                   m.role === "user"
-                    ? "ml-6 bg-neutral-800 text-neutral-100"
-                    : "mr-6 bg-neutral-900 text-neutral-200"
+                    ? "ml-6 bg-rule text-cream"
+                    : "mr-6 bg-ink/80 text-cream/90"
                 }`}
               >
                 {m.role === "assistant" ? (
                   m.content ? (
-                    <div className="prose prose-sm prose-invert max-w-none prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0 prose-headings:my-2 prose-table:my-2 prose-code:rounded prose-code:bg-neutral-800 prose-code:px-1 prose-code:text-xs">
+                    <div className="prose prose-sm prose-invert max-w-none prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0 prose-headings:my-2 prose-table:my-2 prose-code:rounded prose-code:bg-rule prose-code:px-1 prose-code:text-xs">
                       <ReactMarkdown remarkPlugins={[remarkGfm]}>{m.content}</ReactMarkdown>
                     </div>
                   ) : pending && i === messages.length - 1 ? (
-                    <span className="text-neutral-500">...</span>
+                    <span className="text-muted">...</span>
                   ) : null
                 ) : (
                   m.content
@@ -196,11 +230,11 @@ export function AssistantPanel() {
             ))}
 
             {toolNote ? (
-              <p className="text-xs italic text-orange-400">{toolNote}</p>
+              <p className="text-xs italic text-signal">{toolNote}</p>
             ) : null}
           </div>
 
-          <form onSubmit={onSubmit} className="border-t border-neutral-800 p-3">
+          <form onSubmit={onSubmit} className="border-t border-rule p-3">
             <div className="flex gap-2">
               <input
                 type="text"
@@ -208,12 +242,13 @@ export function AssistantPanel() {
                 onChange={(e) => setInput(e.target.value)}
                 placeholder={pending ? "Thinking..." : "Ask anything..."}
                 disabled={pending}
-                className="flex-1 rounded-md border border-neutral-700 bg-neutral-900 px-3 py-2 text-sm outline-none focus:border-orange-500 disabled:opacity-50"
+                data-assistant-input="true"
+                className="flex-1 rounded-md border border-rule bg-ink px-3 py-2 text-sm text-cream outline-none focus:border-signal disabled:opacity-50"
               />
               <button
                 type="submit"
                 disabled={pending || !input.trim()}
-                className="rounded-md bg-orange-500 px-3 py-2 text-sm font-semibold text-neutral-950 transition hover:bg-orange-400 disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-md bg-signal px-3 py-2 text-sm font-semibold text-ink transition hover:bg-signal-300 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Send
               </button>
