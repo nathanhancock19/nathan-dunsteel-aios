@@ -38,3 +38,5 @@ next-env.d.ts
 !.env.example
 # Local logs
 dev-server.log
+dev.log
+dev.err
