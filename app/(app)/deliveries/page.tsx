@@ -1,11 +1,11 @@
-import { getUpcomingDeliveries } from "@/lib/airtable/deliveries"
+import { getUpcomingDeliveries, type Delivery } from "@/lib/airtable/deliveries"
 import { DeliveryList } from "@/components/deliveries/DeliveryList"
 import Link from "next/link"
 
 export const dynamic = "force-dynamic"
 
 export default async function DeliveriesPage() {
-  let deliveries
+  let deliveries: Delivery[] = []
   let error: string | null = null
 
   try {

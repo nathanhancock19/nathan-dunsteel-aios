@@ -1,5 +1,5 @@
 import { listBoardItems } from "@/lib/monday"
-import { listPendingQuotes } from "@/lib/airtable/quotes"
+import { listPendingQuotes, type QuoteApproval } from "@/lib/airtable/quotes"
 import { POList } from "@/components/approvals/POList"
 import { QuoteList } from "@/components/approvals/QuoteList"
 
@@ -14,7 +14,7 @@ async function getPOs() {
 export default async function ApprovalsPage() {
   let pos
   let posError: string | null = null
-  let quotes
+  let quotes: QuoteApproval[] = []
   let quotesError: string | null = null
 
   if (!process.env.MONDAY_API_KEY || !process.env.MONDAY_PO_BOARD_ID) {
