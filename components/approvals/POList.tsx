@@ -1,6 +1,5 @@
 "use client"
 
-import { useState } from "react"
 import type { MondayBoardItem } from "@/lib/monday"
 import { POCard } from "./POCard"
 

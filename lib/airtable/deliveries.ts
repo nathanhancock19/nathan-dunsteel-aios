@@ -10,7 +10,6 @@ import { TABLES } from "./schema"
 import type {
   DeliveryFields,
   DeliveryNoteFields,
-  DeliveryStatusOverrideFields,
 } from "./types"
 import type { Record as AirtableRecord, FieldSet } from "airtable"
 

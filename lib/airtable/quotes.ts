@@ -4,7 +4,7 @@
  * Manual entry for v1 (Outlook Mail.Read deferred until tenant approval).
  */
 
-import { listRecords, findRecord, createRecord, updateRecord } from "./client"
+import { listRecords, createRecord, updateRecord } from "./client"
 import { TABLES } from "./schema"
 import type { QuoteApprovalFields } from "./types"
 import type { Record as AirtableRecord, FieldSet } from "airtable"
