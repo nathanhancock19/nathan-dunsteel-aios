@@ -30,10 +30,6 @@ export default async function DashboardPage() {
           <POApprovalsCard />
         </Suspense>
 
-        <Suspense fallback={<Skeleton title="Urgent flags" />}>
-          <UrgentFlagsCard />
-        </Suspense>
-
         <Suspense fallback={<Skeleton title="Recent site diary" />}>
           <SiteDiaryCard />
         </Suspense>
@@ -46,15 +42,6 @@ function Skeleton({ title }: { title: string }) {
   return (
     <Card title={title}>
       <div className="h-12 animate-pulse rounded bg-neutral-800/60" />
-    </Card>
-  )
-}
-
-function UrgentFlagsCard() {
-  // Urgent-flag source is not defined in the spec yet. Stub for now.
-  return (
-    <Card title="Urgent flags">
-      <p className="text-sm text-neutral-500">No urgent flags. (Source TBD.)</p>
     </Card>
   )
 }
