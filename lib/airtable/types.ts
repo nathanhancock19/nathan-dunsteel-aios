@@ -10,7 +10,17 @@
  */
 
 export type ProjectFields = {
-  Name: string
+  // Existing Day Docket App fields (observed in shared base appG75bF70Uq6ENjJ)
+  "Project Number"?: string
+  "Strumus Name"?: string
+  "PM Assigned"?: string[]
+  Status?: string
+  "Assigned Companies"?: string[]
+  Materials?: unknown
+  "Day Dockets"?: string[]
+
+  // AIOS extensions (to be added to the Projects table per spec Section 5)
+  Name?: string
   "Original Contract Value"?: number
   "Approved Variations Total"?: number
   "Revised Contract Value"?: number

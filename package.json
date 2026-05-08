@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@notionhq/client": "^5.20.0",
     "airtable": "^0.12.2",
     "bcryptjs": "^3.0.3",
     "next": "14.2.35",

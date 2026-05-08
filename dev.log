@@ -1,0 +1,17 @@
+
+> nathan-dunsteel-aios@0.1.0 dev C:\Users\nathanh\nathan-dunsteel-aios
+> next dev
+
+  ▲ Next.js 14.2.35
+  - Local:        http://localhost:3000
+  - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 2.9s
+ ○ Compiling /middleware ...
+ ✓ Compiled /middleware in 743ms (203 modules)
+ ✓ Compiled /api/health in 433ms (201 modules)
+(node:29620) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+ GET /api/health 503 in 3615ms
+[?25h
