@@ -1,0 +1,17 @@
+{
+  "name": "Dunsteel PM AIOS",
+  "short_name": "PM AIOS",
+  "description": "Dunsteel project management hub",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#111111",
+  "theme_color": "#111111",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "any",
+      "type": "image/x-icon"
+    }
+  ]
+}
