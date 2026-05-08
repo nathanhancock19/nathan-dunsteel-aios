@@ -1,6 +1,7 @@
 import { listBoardItems, getColumnOptions, type MondayBoardItem, type ColumnOption } from "@/lib/monday"
 import { listPendingQuotes, type QuoteApproval } from "@/lib/airtable/quotes"
-import { POList } from "@/components/approvals/POList"
+import { suggestPOAllocation } from "@/lib/decisions/log"
+import { POList, type AllocationSuggestion } from "@/components/approvals/POList"
 import { QuoteList } from "@/components/approvals/QuoteList"
 
 export const dynamic = "force-dynamic"
@@ -73,6 +74,21 @@ export default async function ApprovalsPage() {
     }
   }
 
+  // Per-supplier allocation suggestions from the decision log. No-op if
+  // POSTGRES_URL isn't set; just returns null per item.
+  let suggestions: Record<string, AllocationSuggestion> = {}
+  if (pos && pos.length > 0) {
+    const pairs = await Promise.all(
+      pos.map(async (i) => {
+        const s = await suggestPOAllocation(i.name).catch(() => null)
+        return [i.id, s] as const
+      }),
+    )
+    suggestions = Object.fromEntries(
+      pairs.filter(([, s]) => s !== null) as Array<[string, AllocationSuggestion]>,
+    )
+  }
+
   try {
     quotes = await listPendingQuotes()
   } catch (err) {
@@ -111,6 +127,7 @@ export default async function ApprovalsPage() {
             items={pos}
             jobScopeOptions={jobScopeOptions}
             costCodeOptions={costCodeOptions}
+            suggestions={suggestions}
           />
         ) : null}
       </section>

@@ -1,6 +1,7 @@
 import { requireSession } from "@/lib/guards"
 import { changeColumnValue } from "@/lib/monday"
 import { notifyNathan } from "@/lib/telegram"
+import { logDecision } from "@/lib/decisions/log"
 import { NextResponse } from "next/server"
 
 const JOB_SCOPE_COLUMN_ID = "multi_select6"
@@ -59,6 +60,18 @@ export async function POST(
       itemId: params.id,
       columnId: STATUS_COLUMN_ID,
       value: JSON.stringify({ label: "Approved" }),
+    })
+
+    await logDecision({
+      actor: "nathan",
+      category: "po-approval",
+      subject: body.name ?? params.id,
+      body: {
+        itemId: params.id,
+        jobScopeId: body.jobScopeId ?? null,
+        costCodeLabel: body.costCodeLabel ?? null,
+      },
+      sourceId: params.id,
     })
 
     await notifyNathan(`PO approved: ${body.name ?? params.id}`)

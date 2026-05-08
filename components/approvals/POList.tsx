@@ -3,10 +3,18 @@
 import type { MondayBoardItem, ColumnOption } from "@/lib/monday"
 import { POCard } from "./POCard"
 
+export type AllocationSuggestion = {
+  jobScopeId: number | null
+  costCodeLabel: string | null
+  confidence: number
+}
+
 type Props = {
   items: MondayBoardItem[]
   jobScopeOptions: ColumnOption[]
   costCodeOptions: ColumnOption[]
+  /** Optional per-item suggestion from the decision log. */
+  suggestions?: Record<string, AllocationSuggestion>
 }
 
 export type ApprovePayload = {
@@ -14,7 +22,7 @@ export type ApprovePayload = {
   costCodeLabel?: string
 }
 
-export function POList({ items, jobScopeOptions, costCodeOptions }: Props) {
+export function POList({ items, jobScopeOptions, costCodeOptions, suggestions }: Props) {
   const pending = items.filter((i) => {
     const status = i.column_values.find((c) => c.id === "status")?.text ?? ""
     return status.toLowerCase().includes("pending")
@@ -56,6 +64,7 @@ export function POList({ items, jobScopeOptions, costCodeOptions }: Props) {
           item={item}
           jobScopeOptions={jobScopeOptions}
           costCodeOptions={costCodeOptions}
+          suggestion={suggestions?.[item.id]}
           onApprove={handleApprove}
           onQuery={handleQuery}
         />

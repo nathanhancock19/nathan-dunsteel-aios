@@ -2,12 +2,13 @@
 
 import { useState } from "react"
 import type { MondayBoardItem, ColumnOption } from "@/lib/monday"
-import type { ApprovePayload } from "./POList"
+import type { ApprovePayload, AllocationSuggestion } from "./POList"
 
 type Props = {
   item: MondayBoardItem
   jobScopeOptions: ColumnOption[]
   costCodeOptions: ColumnOption[]
+  suggestion?: AllocationSuggestion
   onApprove: (id: string, name: string, alloc?: ApprovePayload) => Promise<void>
   onQuery: (id: string, name: string, message: string) => Promise<void>
 }
@@ -16,10 +17,26 @@ function col(item: MondayBoardItem, id: string): string {
   return item.column_values.find((c) => c.id === id)?.text ?? ""
 }
 
+function buildSuggestionLabel(
+  s: AllocationSuggestion,
+  jobScopeOptions: ColumnOption[],
+): string | null {
+  const parts: string[] = []
+  if (s.jobScopeId !== null) {
+    const match = jobScopeOptions.find((o) => o.id === s.jobScopeId)
+    if (match) parts.push(match.label)
+  }
+  if (s.costCodeLabel) parts.push(s.costCodeLabel)
+  if (parts.length === 0) return null
+  const conf = Math.round(s.confidence * 100)
+  return `${parts.join(" / ")} (${conf}% match, last 90d)`
+}
+
 export function POCard({
   item,
   jobScopeOptions,
   costCodeOptions,
+  suggestion,
   onApprove,
   onQuery,
 }: Props) {
@@ -38,14 +55,26 @@ export function POCard({
   const invoiceUrl = item.column_values.find((c) => c.id === "upload_file")?.text ?? ""
 
   // Pre-select existing values on the dropdowns when allocation panel opens.
+  // If the PO has no current allocation but a supplier-learning suggestion
+  // exists, use the suggestion as the initial picker value.
   const initialJobScopeId = (() => {
-    const match = jobScopeOptions.find((o) => o.label === jobScope)
-    return match?.id.toString() ?? ""
+    if (jobScope) {
+      const match = jobScopeOptions.find((o) => o.label === jobScope)
+      if (match) return match.id.toString()
+    }
+    if (suggestion?.jobScopeId !== null && suggestion?.jobScopeId !== undefined) {
+      return suggestion.jobScopeId.toString()
+    }
+    return ""
   })()
-  const initialCostCode = costCode
+  const initialCostCode = costCode || suggestion?.costCodeLabel || ""
 
   const [jobScopeId, setJobScopeId] = useState<string>(initialJobScopeId)
   const [costCodeLabel, setCostCodeLabel] = useState<string>(initialCostCode)
+
+  const suggestionLabel = suggestion
+    ? buildSuggestionLabel(suggestion, jobScopeOptions)
+    : null
 
   const act = async (key: "approve" | "query", fn: () => Promise<void>) => {
     setLoading(key)
@@ -127,6 +156,12 @@ export function POCard({
           </p>
           <p className="whitespace-pre-wrap text-neutral-300">{additionalComments}</p>
         </div>
+      )}
+
+      {suggestionLabel && !showAllocate && (
+        <p className="mb-3 text-xs text-signal/80">
+          Suggested: {suggestionLabel}
+        </p>
       )}
 
       {error && <p className="mb-2 text-xs text-red-400">{error}</p>}
