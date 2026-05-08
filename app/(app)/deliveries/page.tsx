@@ -1,17 +1,16 @@
-import { getDeliveriesForWeek } from "@/lib/sheets/deliveries"
+import { getDeliveriesForWeek, type DeliveriesForDay } from "@/lib/sheets/deliveries"
 
 export const dynamic = "force-dynamic"
 
 export default async function DeliveriesPage() {
   const projectFilter = process.env.AIOS_PRIMARY_PROJECT_NUMBER
-  let days
+  let days: DeliveriesForDay[] = []
   let error: string | null = null
 
   try {
     days = await getDeliveriesForWeek({ projectFilter })
   } catch (err) {
     error = err instanceof Error ? err.message : String(err)
-    days = []
   }
 
   const daysWithJobs = days.filter((d) => d.jobs.length > 0)
