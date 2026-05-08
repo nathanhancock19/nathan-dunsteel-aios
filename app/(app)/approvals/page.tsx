@@ -1,14 +1,41 @@
-import { listBoardItems } from "@/lib/monday"
+import { listBoardItems, type MondayBoardItem } from "@/lib/monday"
 import { listPendingQuotes, type QuoteApproval } from "@/lib/airtable/quotes"
 import { POList } from "@/components/approvals/POList"
 import { QuoteList } from "@/components/approvals/QuoteList"
 
 export const dynamic = "force-dynamic"
 
+const ASSIGNEE_COLUMN_ID = "people"
+
 async function getPOs() {
   const boardId = process.env.MONDAY_PO_BOARD_ID
   if (!boardId) return null
   return listBoardItems(boardId, 50)
+}
+
+/**
+ * Filter PO list to items where Nathan is in the people (Assignee) column.
+ *
+ * The Monday `people` column stores the assignee in `value` as JSON, e.g.
+ *   {"changed_at":"...","personsAndTeams":[{"id":73750162,"kind":"person"}]}
+ * We parse `value` (not `text`) to match by id.
+ *
+ * If AIOS_USER_MONDAY_ID is unset, no filter is applied (returns all items).
+ */
+function filterToAssignee(items: MondayBoardItem[], userId: number | null): MondayBoardItem[] {
+  if (userId === null) return items
+  return items.filter((item) => {
+    const raw = item.column_values.find((c) => c.id === ASSIGNEE_COLUMN_ID)?.value
+    if (!raw) return false
+    try {
+      const parsed = JSON.parse(raw) as {
+        personsAndTeams?: Array<{ id: number; kind: string }>
+      }
+      return parsed.personsAndTeams?.some((p) => p.id === userId) ?? false
+    } catch {
+      return false
+    }
+  })
 }
 
 export default async function ApprovalsPage() {
@@ -21,7 +48,10 @@ export default async function ApprovalsPage() {
     posError = "MONDAY_API_KEY or MONDAY_PO_BOARD_ID not set"
   } else {
     try {
-      pos = await getPOs()
+      const all = await getPOs()
+      const userIdRaw = process.env.AIOS_USER_MONDAY_ID
+      const userId = userIdRaw ? Number(userIdRaw) : null
+      pos = all === null ? null : filterToAssignee(all, userId)
     } catch (err) {
       posError = err instanceof Error ? err.message : String(err)
     }
