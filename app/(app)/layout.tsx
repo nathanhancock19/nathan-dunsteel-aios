@@ -21,6 +21,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
           </Link>
           <nav className="flex items-center gap-4 text-sm text-neutral-400">
             <Link href="/dashboard" className="hover:text-neutral-100">Dashboard</Link>
+            <Link href="/projects" className="hover:text-neutral-100">Projects</Link>
             <Link href="/modules" className="hover:text-neutral-100">Modules</Link>
           </nav>
         </div>
