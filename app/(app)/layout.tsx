@@ -2,6 +2,7 @@ import { auth, signOut } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import Link from "next/link"
 import { ReactNode } from "react"
+import { AssistantPanel } from "@/components/assistant/AssistantPanel"
 
 async function signOutAction() {
   "use server"
@@ -38,6 +39,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
         </div>
       </header>
       <main className="px-6 py-8">{children}</main>
+      <AssistantPanel />
     </div>
   )
 }

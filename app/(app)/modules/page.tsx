@@ -29,6 +29,18 @@ function getModules(): Module[] {
       url: process.env.NOTION_SITE_DIARY_URL,
       status: "live",
     },
+    {
+      name: "Power BI",
+      description: "Project budget and cost reports until Budget Tracker module ships.",
+      url: process.env.POWER_BI_URL,
+      status: "live",
+    },
+    {
+      name: "Project Forecast (Notion)",
+      description: "Weekly-updated forecast of remaining project work.",
+      url: process.env.NOTION_FORECAST_URL,
+      status: "live",
+    },
   ]
 }
 

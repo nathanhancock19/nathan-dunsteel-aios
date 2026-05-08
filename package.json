@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.95.1",
     "@notionhq/client": "^5.20.0",
     "airtable": "^0.12.2",
     "bcryptjs": "^3.0.3",
