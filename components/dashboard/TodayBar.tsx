@@ -9,16 +9,16 @@ export function TodayBar({ name }: { name: string }) {
   const greeting = pickGreeting(now.getHours())
 
   return (
-    <div className="mb-6 flex items-baseline justify-between border-b border-neutral-800 pb-4">
+    <div className="mb-6 flex flex-wrap items-baseline justify-between gap-2 border-b border-rule pb-4">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">
+        <h1 className="text-2xl font-semibold tracking-tight text-cream">
           {greeting}, {name.split(" ")[0]}.
         </h1>
-        <p className="text-sm text-neutral-400">
+        <p className="text-sm text-muted">
           {weekday}, {date}
         </p>
       </div>
-      <p className="text-xs text-neutral-500">Weather: TBD</p>
+      <p className="label">{now.toLocaleDateString("en-CA")}</p>
     </div>
   )
 }

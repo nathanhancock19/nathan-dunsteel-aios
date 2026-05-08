@@ -14,33 +14,34 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   if (!session) redirect("/login")
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-100">
-      <header className="flex items-center justify-between border-b border-neutral-800 px-6 py-3">
-        <div className="flex items-center gap-6">
-          <Link href="/dashboard" className="text-sm font-semibold tracking-tight">
-            Dunsteel PM AIOS
+    <div className="min-h-screen bg-ink text-cream">
+      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-rule px-4 py-3 sm:px-6">
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+          <Link href="/dashboard" className="flex items-center gap-2 text-sm font-semibold tracking-tight">
+            <span className="inline-block h-2 w-2 rounded-full bg-signal" aria-hidden />
+            <span>Dunsteel PM AIOS</span>
           </Link>
-          <nav className="flex items-center gap-4 text-sm text-neutral-400">
-            <Link href="/dashboard" className="hover:text-neutral-100">Dashboard</Link>
-            <Link href="/deliveries" className="hover:text-neutral-100">Deliveries</Link>
-            <Link href="/approvals" className="hover:text-neutral-100">Approvals</Link>
-            <Link href="/projects" className="hover:text-neutral-100">Projects</Link>
-            <Link href="/modules" className="hover:text-neutral-100">Modules</Link>
+          <nav className="flex items-center gap-4 text-xs font-medium uppercase tracking-wider text-muted sm:text-[11px]">
+            <Link href="/dashboard" className="hover:text-cream">Dashboard</Link>
+            <Link href="/deliveries" className="hover:text-cream">Deliveries</Link>
+            <Link href="/approvals" className="hover:text-cream">Approvals</Link>
+            <Link href="/projects" className="hover:text-cream">Projects</Link>
+            <Link href="/modules" className="hover:text-cream">Modules</Link>
           </nav>
         </div>
-        <div className="flex items-center gap-3 text-sm text-neutral-400">
-          <span>{session.user?.name}</span>
+        <div className="flex items-center gap-3 text-xs text-muted">
+          <span className="hidden sm:inline">{session.user?.name}</span>
           <form action={signOutAction}>
             <button
               type="submit"
-              className="rounded-md border border-neutral-700 px-3 py-1 text-xs hover:border-neutral-500 hover:text-neutral-100"
+              className="rounded-md border border-rule px-3 py-1 text-[11px] font-medium uppercase tracking-wider text-muted hover:border-muted hover:text-cream"
             >
               Sign out
             </button>
           </form>
         </div>
       </header>
-      <main className="px-6 py-8">{children}</main>
+      <main className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-8">{children}</main>
       <AssistantPanel />
     </div>
   )

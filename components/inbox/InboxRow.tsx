@@ -32,8 +32,8 @@ export function InboxRow({ item, state, onChange }: Props) {
   function actionWrapper(href: string, label: string, variant?: string) {
     const className =
       variant === "primary"
-        ? "rounded-md bg-orange-500 px-3 py-1.5 text-xs font-medium text-neutral-950 hover:bg-orange-400"
-        : "rounded-md border border-neutral-700 px-3 py-1.5 text-xs font-medium text-neutral-300 hover:border-neutral-500"
+        ? "rounded-md bg-signal px-3 py-1.5 text-xs font-medium text-ink hover:bg-signal-300"
+        : "rounded-md border border-rule px-3 py-1.5 text-xs font-medium text-cream hover:border-muted"
     if (isExternal(href)) {
       return (
         <a key={href} href={href} target="_blank" rel="noreferrer" className={className}>
@@ -66,20 +66,20 @@ export function InboxRow({ item, state, onChange }: Props) {
   const waitingNote = state.kind === "waiting" ? state.for : null
 
   return (
-    <div className="border-b border-neutral-900 py-3 first:pt-0 last:border-b-0">
+    <div className="border-b border-rule py-3 first:pt-2 last:border-b-0">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <div className="mb-1 flex items-center gap-2 text-[10px] font-medium uppercase tracking-wider text-neutral-500">
-            <span>{badge}</span>
+          <div className="mb-1 flex items-center gap-2">
+            <span className="label">{badge}</span>
             {waitingNote && (
-              <span className="rounded-full bg-neutral-800 px-2 py-0.5 text-[10px] text-neutral-400">
+              <span className="rounded-full bg-rule px-2 py-0.5 text-[10px] text-muted">
                 waiting · {waitingNote}
               </span>
             )}
           </div>
-          <p className="truncate text-sm font-medium text-neutral-100">{item.title}</p>
+          <p className="truncate text-sm font-medium text-cream">{item.title}</p>
           {item.context && (
-            <p className="mt-0.5 truncate text-xs text-neutral-500">{item.context}</p>
+            <p className="mt-0.5 truncate text-xs text-muted">{item.context}</p>
           )}
         </div>
 
@@ -89,7 +89,7 @@ export function InboxRow({ item, state, onChange }: Props) {
             type="button"
             onClick={() => setShowMore((v) => !v)}
             aria-label="More actions"
-            className="rounded-md border border-neutral-800 px-2 py-1.5 text-xs text-neutral-500 hover:border-neutral-700 hover:text-neutral-300"
+            className="rounded-md border border-rule px-2 py-1.5 text-xs text-muted hover:border-muted hover:text-cream"
           >
             ...
           </button>
@@ -101,19 +101,19 @@ export function InboxRow({ item, state, onChange }: Props) {
           {secondaries.map((a) => actionWrapper(a.href, a.label, a.variant))}
           <button
             onClick={handleDone}
-            className="rounded-md border border-neutral-800 px-3 py-1 text-xs text-neutral-400 hover:border-neutral-700 hover:text-neutral-200"
+            className="rounded-md border border-rule px-3 py-1 text-xs text-muted hover:border-muted hover:text-cream"
           >
             Mark done
           </button>
           <button
             onClick={() => handleSnooze(24)}
-            className="rounded-md border border-neutral-800 px-3 py-1 text-xs text-neutral-400 hover:border-neutral-700 hover:text-neutral-200"
+            className="rounded-md border border-rule px-3 py-1 text-xs text-muted hover:border-muted hover:text-cream"
           >
             Snooze 24h
           </button>
           <button
             onClick={handleWaiting}
-            className="rounded-md border border-neutral-800 px-3 py-1 text-xs text-neutral-400 hover:border-neutral-700 hover:text-neutral-200"
+            className="rounded-md border border-rule px-3 py-1 text-xs text-muted hover:border-muted hover:text-cream"
           >
             Waiting on...
           </button>

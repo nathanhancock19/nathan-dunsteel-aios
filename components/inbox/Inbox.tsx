@@ -65,7 +65,7 @@ export function Inbox() {
 
   if (error) {
     return (
-      <div className="rounded-md border border-red-900 bg-red-950 px-4 py-3 text-sm text-red-300">
+      <div className="rounded-md border border-red-900/60 bg-red-950/40 px-4 py-3 text-sm text-red-300">
         Inbox error: {error}
       </div>
     )
@@ -75,7 +75,7 @@ export function Inbox() {
     return (
       <div className="space-y-2">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="h-12 animate-pulse rounded-md bg-neutral-900" />
+          <div key={i} className="h-12 animate-pulse rounded-md bg-rule/60" />
         ))}
       </div>
     )
@@ -83,9 +83,9 @@ export function Inbox() {
 
   if (visible.length === 0) {
     return (
-      <div className="rounded-lg border border-neutral-900 bg-neutral-950/50 px-4 py-8 text-center">
-        <p className="text-sm text-neutral-400">You&apos;re clear.</p>
-        <p className="mt-1 text-xs text-neutral-600">
+      <div className="rounded-lg border border-rule bg-ink/60 px-4 py-10 text-center">
+        <p className="text-sm font-medium text-cream">You&apos;re clear.</p>
+        <p className="mt-1 text-xs text-muted">
           {new Date().toLocaleDateString("en-AU", {
             weekday: "long",
             day: "numeric",
@@ -97,19 +97,17 @@ export function Inbox() {
   }
 
   return (
-    <div className="overflow-hidden rounded-lg border border-neutral-900 bg-neutral-950/50">
+    <div className="overflow-hidden rounded-lg border border-rule bg-ink/60">
       {(Object.keys(URGENCY_LABEL) as InboxUrgency[]).map((tier) => {
         const tierItems = grouped[tier]
         if (tierItems.length === 0) return null
         const visibleInTier =
           totalShown <= VISIBLE_CAP ? tierItems : tierItems.slice(0, Math.max(0, VISIBLE_CAP))
         return (
-          <div key={tier} className="border-b border-neutral-900 last:border-b-0">
+          <div key={tier} className="border-b border-rule last:border-b-0">
             <div className="flex items-center justify-between px-4 pt-3">
-              <p className="text-[10px] font-medium uppercase tracking-wider text-neutral-500">
-                {URGENCY_LABEL[tier]}
-              </p>
-              <p className="text-[10px] text-neutral-700">{tierItems.length}</p>
+              <p className="label">{URGENCY_LABEL[tier]}</p>
+              <p className="mono-nums text-[10px] text-muted">{tierItems.length}</p>
             </div>
             <div className="px-4 pb-2">
               {visibleInTier.map((item) => (
@@ -125,14 +123,14 @@ export function Inbox() {
         )
       })}
       {overflow > 0 && (
-        <div className="border-t border-neutral-900 px-4 py-2 text-center text-xs text-neutral-600">
+        <div className="border-t border-rule px-4 py-2 text-center text-xs text-muted">
           +{overflow} more, prioritising urgent items
         </div>
       )}
-      <div className="border-t border-neutral-900 px-4 py-2">
+      <div className="border-t border-rule px-4 py-2">
         <button
           onClick={() => setRefreshTick((t) => t + 1)}
-          className="text-[10px] uppercase tracking-wider text-neutral-600 hover:text-neutral-400"
+          className="label hover:text-cream"
         >
           Refresh
         </button>
