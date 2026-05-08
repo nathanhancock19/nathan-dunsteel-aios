@@ -24,6 +24,7 @@ export function POCard({ item, onApprove, onQuery }: Props) {
   const date = col(item, "date__1")
   const costCode = col(item, "single_select")
   const jobScope = col(item, "multi_select6")
+  const additionalComments = col(item, "long_text_mkrv1x66")
   const invoiceUrl = item.column_values.find((c) => c.id === "upload_file")?.text ?? ""
 
   const act = async (key: "approve" | "query", fn: () => Promise<void>) => {
@@ -87,6 +88,15 @@ export function POCard({ item, onApprove, onQuery }: Props) {
           </p>
         )}
       </div>
+
+      {additionalComments && (
+        <div className="mb-3 rounded-md border border-neutral-800 bg-neutral-950 px-3 py-2 text-xs leading-relaxed text-neutral-400">
+          <p className="mb-1 text-[10px] font-medium uppercase tracking-wider text-neutral-600">
+            Additional comments
+          </p>
+          <p className="whitespace-pre-wrap text-neutral-300">{additionalComments}</p>
+        </div>
+      )}
 
       {error && <p className="mb-2 text-xs text-red-400">{error}</p>}
 
