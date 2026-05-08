@@ -16,6 +16,28 @@ function todayISO(): string {
   return new Date(d.getTime() - tz).toISOString().slice(0, 10)
 }
 
+/**
+ * Build the Airtable filterByFormula clause for the configured primary
+ * project. AIOS is currently single-project (411 Lane Cove); other PMs'
+ * projects are filtered out at the data layer so they never reach the UI.
+ *
+ * If AIOS_PRIMARY_PROJECT_NUMBER is unset, no project filter is applied.
+ */
+function projectFilterClause(): string | null {
+  const num = process.env.AIOS_PRIMARY_PROJECT_NUMBER
+  if (!num) return null
+  // ARRAYJOIN({Project}) returns the linked records' primary field text
+  // (typically "411", "397", etc), so a substring match works.
+  return `FIND("${num}", ARRAYJOIN({Project}, ","))`
+}
+
+function combineAnd(...clauses: (string | null | undefined)[]): string {
+  const live = clauses.filter((c): c is string => Boolean(c))
+  if (live.length === 0) return ""
+  if (live.length === 1) return live[0]
+  return `AND(${live.join(", ")})`
+}
+
 export type TodayDocket = {
   id: string
   ref: string
@@ -43,12 +65,16 @@ function toTodayDocket(r: AirtableRecord<DayDocketFields & FieldSet>): TodayDock
 }
 
 /**
- * Fetch all Day Dockets dated today.
+ * Fetch all Day Dockets dated today, scoped to the configured primary project.
  */
 export async function getTodayDockets(): Promise<TodayDocket[]> {
   const today = todayISO()
+  const formula = combineAnd(
+    `IS_SAME({Date}, "${today}", "day")`,
+    projectFilterClause(),
+  )
   const records = await listRecords(TABLES.DAY_DOCKETS, {
-    filterByFormula: `IS_SAME({Date}, "${today}", "day")`,
+    filterByFormula: formula,
     fields: ["Docket Ref", "Project", "Company", "Status", "Date", "Hour Type", "Worker Entries"],
     maxRecords: 100,
   })

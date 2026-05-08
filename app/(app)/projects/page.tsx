@@ -8,9 +8,13 @@ export default async function ProjectsPage() {
     | null = null
   let error: string | null = null
 
+  const primaryProject = process.env.AIOS_PRIMARY_PROJECT_NUMBER
   try {
     records = await listRecords(TABLES.PROJECTS, {
       maxRecords: 50,
+      filterByFormula: primaryProject
+        ? `FIND("${primaryProject}", {Project Number})`
+        : "",
       fields: [
         "Project Number",
         "Strumus Name",
@@ -25,9 +29,13 @@ export default async function ProjectsPage() {
 
   return (
     <section>
-      <h1 className="mb-1 text-2xl font-semibold tracking-tight">Projects</h1>
+      <h1 className="mb-1 text-2xl font-semibold tracking-tight">
+        {primaryProject ? `Project ${primaryProject}` : "Projects"}
+      </h1>
       <p className="mb-6 text-sm text-neutral-400">
-        Live read from the shared Airtable base.
+        {primaryProject
+          ? `Filtered to your primary project. Unset AIOS_PRIMARY_PROJECT_NUMBER in .env.local to see all.`
+          : "Live read from the shared Airtable base."}
       </p>
 
       {error ? (

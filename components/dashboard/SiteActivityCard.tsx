@@ -13,16 +13,19 @@ export async function SiteActivityCard() {
     )
   }
 
+  const projectScope = process.env.AIOS_PRIMARY_PROJECT_NUMBER
+  const subtitle = projectScope ? `${summary.date} | Project ${projectScope}` : summary.date
+
   if (summary.totalDockets === 0) {
     return (
-      <Card title="Today on site" subtitle={summary.date}>
+      <Card title="Today on site" subtitle={subtitle}>
         <EmptyState>No dockets submitted for today yet.</EmptyState>
       </Card>
     )
   }
 
   return (
-    <Card title="Today on site" subtitle={summary.date}>
+    <Card title="Today on site" subtitle={subtitle}>
       <div className="grid grid-cols-3 gap-4">
         <Stat label="Dockets" value={summary.totalDockets} />
         <Stat label="Projects" value={summary.uniqueProjectIds.length} />
