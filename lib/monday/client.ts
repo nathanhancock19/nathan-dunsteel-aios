@@ -127,6 +127,82 @@ export async function changeColumnValue(args: {
   return data.change_column_value
 }
 
+/**
+ * One option from a Monday dropdown or status column. `id` is the numeric
+ * label id (used for dropdown writes), `label` is the human-readable string
+ * (used for status writes).
+ */
+export type ColumnOption = { id: number; label: string }
+
+type RawColumn = { id: string; type: string; settings_str: string | null }
+
+/**
+ * Read the options available on one or more dropdown / status columns of a
+ * board. Used to populate allocation pickers (Job/Scope, Cost Code) without
+ * hard-coding the lists.
+ *
+ * Returns a map keyed by columnId. Unknown column ids return [].
+ *
+ * Dropdown columns store options as `settings.labels = [{id, name}]`.
+ * Status/color columns store options as `settings.labels = { "0": "name", ... }`.
+ */
+export async function getColumnOptions(
+  boardId: string,
+  columnIds: string[],
+): Promise<Record<string, ColumnOption[]>> {
+  const data = await mondayQuery<{ boards: { columns: RawColumn[] }[] }>(
+    `query ($boardId: [ID!]) {
+      boards(ids: $boardId) {
+        columns {
+          id
+          type
+          settings_str
+        }
+      }
+    }`,
+    { boardId: [boardId] },
+  )
+
+  const cols = data.boards[0]?.columns ?? []
+  const out: Record<string, ColumnOption[]> = {}
+
+  for (const id of columnIds) {
+    const col = cols.find((c) => c.id === id)
+    if (!col || !col.settings_str) {
+      out[id] = []
+      continue
+    }
+    let settings: { labels?: unknown }
+    try {
+      settings = JSON.parse(col.settings_str) as { labels?: unknown }
+    } catch {
+      out[id] = []
+      continue
+    }
+
+    if (col.type === "dropdown" && Array.isArray(settings.labels)) {
+      out[id] = (settings.labels as Array<{ id: number; name: string }>).map((l) => ({
+        id: l.id,
+        label: l.name,
+      }))
+    } else if (
+      (col.type === "color" || col.type === "status") &&
+      settings.labels &&
+      typeof settings.labels === "object" &&
+      !Array.isArray(settings.labels)
+    ) {
+      const labels = settings.labels as Record<string, string>
+      out[id] = Object.entries(labels).map(([labelId, label]) => ({
+        id: Number(labelId),
+        label,
+      }))
+    } else {
+      out[id] = []
+    }
+  }
+  return out
+}
+
 export async function pingMonday(): Promise<{ ok: boolean; error?: string }> {
   try {
     await mondayQuery<{ me: { id: string } }>(`query { me { id } }`)

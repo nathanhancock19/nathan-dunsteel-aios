@@ -1,23 +1,30 @@
 "use client"
 
-import type { MondayBoardItem } from "@/lib/monday"
+import type { MondayBoardItem, ColumnOption } from "@/lib/monday"
 import { POCard } from "./POCard"
 
 type Props = {
   items: MondayBoardItem[]
+  jobScopeOptions: ColumnOption[]
+  costCodeOptions: ColumnOption[]
 }
 
-export function POList({ items }: Props) {
+export type ApprovePayload = {
+  jobScopeId?: number
+  costCodeLabel?: string
+}
+
+export function POList({ items, jobScopeOptions, costCodeOptions }: Props) {
   const pending = items.filter((i) => {
     const status = i.column_values.find((c) => c.id === "status")?.text ?? ""
     return status.toLowerCase().includes("pending")
   })
 
-  const handleApprove = async (id: string, name: string) => {
+  const handleApprove = async (id: string, name: string, alloc?: ApprovePayload) => {
     const res = await fetch(`/api/monday/pos/${id}/approve`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name }),
+      body: JSON.stringify({ name, ...alloc }),
     })
     if (!res.ok) {
       const body = await res.json()
@@ -47,6 +54,8 @@ export function POList({ items }: Props) {
         <POCard
           key={item.id}
           item={item}
+          jobScopeOptions={jobScopeOptions}
+          costCodeOptions={costCodeOptions}
           onApprove={handleApprove}
           onQuery={handleQuery}
         />

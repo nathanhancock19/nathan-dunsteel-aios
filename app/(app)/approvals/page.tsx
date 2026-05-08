@@ -1,4 +1,4 @@
-import { listBoardItems, type MondayBoardItem } from "@/lib/monday"
+import { listBoardItems, getColumnOptions, type MondayBoardItem, type ColumnOption } from "@/lib/monday"
 import { listPendingQuotes, type QuoteApproval } from "@/lib/airtable/quotes"
 import { POList } from "@/components/approvals/POList"
 import { QuoteList } from "@/components/approvals/QuoteList"
@@ -6,6 +6,8 @@ import { QuoteList } from "@/components/approvals/QuoteList"
 export const dynamic = "force-dynamic"
 
 const ASSIGNEE_COLUMN_ID = "people"
+const JOB_SCOPE_COLUMN_ID = "multi_select6"
+const COST_CODE_COLUMN_ID = "single_select"
 
 async function getPOs() {
   const boardId = process.env.MONDAY_PO_BOARD_ID
@@ -41,6 +43,8 @@ function filterToAssignee(items: MondayBoardItem[], userId: number | null): Mond
 export default async function ApprovalsPage() {
   let pos
   let posError: string | null = null
+  let jobScopeOptions: ColumnOption[] = []
+  let costCodeOptions: ColumnOption[] = []
   let quotes: QuoteApproval[] = []
   let quotesError: string | null = null
 
@@ -54,6 +58,18 @@ export default async function ApprovalsPage() {
       pos = all === null ? null : filterToAssignee(all, userId)
     } catch (err) {
       posError = err instanceof Error ? err.message : String(err)
+    }
+
+    try {
+      const opts = await getColumnOptions(process.env.MONDAY_PO_BOARD_ID, [
+        JOB_SCOPE_COLUMN_ID,
+        COST_CODE_COLUMN_ID,
+      ])
+      jobScopeOptions = opts[JOB_SCOPE_COLUMN_ID] ?? []
+      costCodeOptions = opts[COST_CODE_COLUMN_ID] ?? []
+    } catch {
+      // Options are non-critical: missing options just disables the
+      // allocation pickers; status flip still works.
     }
   }
 
@@ -91,7 +107,11 @@ export default async function ApprovalsPage() {
             {posError}
           </div>
         ) : pos ? (
-          <POList items={pos} />
+          <POList
+            items={pos}
+            jobScopeOptions={jobScopeOptions}
+            costCodeOptions={costCodeOptions}
+          />
         ) : null}
       </section>
 
