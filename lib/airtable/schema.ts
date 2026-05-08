@@ -12,7 +12,8 @@ export const TABLES = {
   // Day Docket App tables (read-mostly from AIOS)
   PROJECTS: "Projects",
   ACTIVITY_LOG: "Activity Log",
-  DOCKETS: "Dockets",
+  DAY_DOCKETS: "Day Dockets",
+  COMPANIES: "Companies",
 
   // AIOS-owned tables (Section 5 of the spec)
   BUDGET_ITEMS: "BudgetItems",

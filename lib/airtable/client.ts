@@ -11,6 +11,8 @@ import { TABLES, type TableName } from "./schema"
 import type {
   ProjectFields,
   ActivityLogFields,
+  DayDocketFields,
+  CompanyFields,
   BudgetItemFields,
   VariationFields,
   VariationLineItemFields,
@@ -43,7 +45,8 @@ function getBase(): Airtable.Base {
 type TableFieldMap = {
   [TABLES.PROJECTS]: ProjectFields
   [TABLES.ACTIVITY_LOG]: ActivityLogFields
-  [TABLES.DOCKETS]: FieldSet // Day Docket App owns this; AIOS reads opaquely
+  [TABLES.DAY_DOCKETS]: DayDocketFields
+  [TABLES.COMPANIES]: CompanyFields
   [TABLES.BUDGET_ITEMS]: BudgetItemFields
   [TABLES.VARIATIONS]: VariationFields
   [TABLES.VARIATION_LINE_ITEMS]: VariationLineItemFields

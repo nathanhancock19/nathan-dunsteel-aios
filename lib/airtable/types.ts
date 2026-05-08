@@ -37,6 +37,21 @@ export type ActivityLogFields = {
   Notes?: string
 }
 
+export type DayDocketFields = {
+  "Docket Ref": string
+  Project?: string[]
+  Company?: string[]
+  Status?: "Draft" | "Submitted" | "Approved" | "Rejected" | string
+  Date?: string
+  "Hour Type"?: "Standard" | "Overtime" | string
+  "Worker Entries"?: string[]
+  Invoice?: string[]
+}
+
+export type CompanyFields = {
+  Name?: string
+}
+
 export type BudgetItemFields = {
   Project: string[]
   Category: string
