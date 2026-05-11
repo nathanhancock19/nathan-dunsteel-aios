@@ -1,4 +1,12 @@
-import { ReactNode } from "react"
+/**
+ * Legacy dashboard Card export.
+ *
+ * Re-exports the new ui/Card + supporting state components so all existing
+ * widgets (DiaryTodayCard, DefectsCard, NotesCard, etc.) keep working
+ * without per-widget edits during the polish migration.
+ */
+import type { ReactNode } from "react"
+import { Card as UICard } from "@/components/ui/Card"
 
 export function Card({
   title,
@@ -10,23 +18,19 @@ export function Card({
   children: ReactNode
 }) {
   return (
-    <div className="rounded-xl border border-rule bg-ink/60 p-4">
-      <div className="mb-3 flex items-baseline justify-between">
-        <h2 className="text-sm font-semibold tracking-tight text-cream">{title}</h2>
-        {subtitle ? <span className="label">{subtitle}</span> : null}
-      </div>
+    <UICard title={title} subtitle={subtitle}>
       {children}
-    </div>
+    </UICard>
   )
 }
 
 export function EmptyState({ children }: { children: ReactNode }) {
-  return <p className="text-sm text-muted">{children}</p>
+  return <p className="text-sm text-fg-muted">{children}</p>
 }
 
 export function ErrorState({ message }: { message: string }) {
   return (
-    <p className="text-sm text-red-300">
+    <p className="text-sm text-danger">
       <span className="font-semibold">Error:</span> {message}
     </p>
   )
@@ -34,9 +38,8 @@ export function ErrorState({ message }: { message: string }) {
 
 export function ConfigState({ envVar }: { envVar: string }) {
   return (
-    <p className="text-sm text-muted">
-      Set <code className="rounded bg-rule px-1 py-0.5 text-xs">{envVar}</code> in
-      .env.local to enable this widget.
+    <p className="text-sm text-fg-muted">
+      Set <code className="rounded bg-surface-3 px-1 py-0.5 text-xs">{envVar}</code> in env to enable this widget.
     </p>
   )
 }

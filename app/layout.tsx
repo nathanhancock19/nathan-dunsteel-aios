@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next"
 import localFont from "next/font/local"
 import "./globals.css"
+import { ThemeProvider, THEME_SCRIPT } from "@/lib/theme/provider"
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -14,18 +15,21 @@ const geistMono = localFont({
 })
 
 export const metadata: Metadata = {
-  title: "Dunsteel PM AIOS",
+  title: "Dunsteel AIOS",
   description: "Dunsteel project management hub",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "PM AIOS",
+    title: "AIOS",
   },
 }
 
 export const viewport: Viewport = {
-  themeColor: "#111111",
+  themeColor: [
+    { media: "(prefers-color-scheme: dark)", color: "#0F2030" },
+    { media: "(prefers-color-scheme: light)", color: "#F2F5F8" },
+  ],
   width: "device-width",
   initialScale: 1,
 }
@@ -36,9 +40,12 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+      </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        {children}
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   )

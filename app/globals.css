@@ -2,16 +2,78 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #111111;
-  --foreground: #F8F6F1;
+/*
+ * Dunsteel AIOS theme tokens.
+ *
+ * Sampled from the Dunsteel logo (steel-navy palette). All component
+ * styling references these via `bg-bg`, `text-fg`, etc. (Tailwind tokens
+ * defined in tailwind.config.ts pointing at these variables).
+ *
+ * Theme switches by setting data-theme="light" on <html>. Dark is the
+ * default. A small <script> in <head> resolves the preferred theme before
+ * paint to avoid a flash of the wrong colour scheme.
+ */
+
+:root,
+[data-theme="dark"] {
+  --bg: #0F2030;
+  --surface: #15293D;
+  --surface-2: #1D3A52;
+  --surface-3: #294E6D;
+  --border: #2A4A66;
+  --border-strong: #3B5C7A;
+  --fg: #F0F4F7;
+  --fg-muted: #93A4B5;
+  --fg-subtle: #647A8E;
+  --accent: #FFA300;
+  --accent-hover: #FFB733;
+  --accent-fg: #102536;
+  --success: #10B981;
+  --warning: #F59E0B;
+  --danger: #EF4444;
+  --danger-fg: #FFFFFF;
+  --steel-700: #2A4A66;
+  --steel-800: #1B3A52;
+}
+
+[data-theme="light"] {
+  --bg: #F2F5F8;
+  --surface: #FFFFFF;
+  --surface-2: #F7F9FB;
+  --surface-3: #EDF2F6;
+  --border: #DCE3EA;
+  --border-strong: #B6C3CE;
+  --fg: #0F2030;
+  --fg-muted: #5A6C7D;
+  --fg-subtle: #8B9CAB;
+  --accent: #E68A00;
+  --accent-hover: #FFA300;
+  --accent-fg: #FFFFFF;
+  --success: #059669;
+  --warning: #D97706;
+  --danger: #DC2626;
+  --danger-fg: #FFFFFF;
+  --steel-700: #D5DCE2;
+  --steel-800: #1B3A52;
+}
+
+html {
+  background: var(--bg);
+  color: var(--fg);
+  color-scheme: dark;
+}
+
+[data-theme="light"] html,
+html[data-theme="light"] {
+  color-scheme: light;
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
+  color: var(--fg);
+  background: var(--bg);
   font-family: var(--font-geist-sans), system-ui, sans-serif;
   font-feature-settings: "ss01", "cv11";
+  transition: background-color 150ms ease, color 150ms ease;
 }
 
 /* Mono numerics: pair with `tabular-nums` on numeric cells. */
@@ -30,6 +92,41 @@ body {
     font-weight: 500;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    color: #7A7670;
+    color: var(--fg-muted);
   }
+}
+
+@layer base {
+  *::selection {
+    background: var(--accent);
+    color: var(--accent-fg);
+  }
+}
+
+/*
+ * Logo is sourced from a JPG which has a white background and dark-navy mark.
+ * In dark mode that white background is jarring. Apply a light-on-dark
+ * compositing trick: multiply blend mode tints the white -> bg colour.
+ */
+[data-theme="dark"] .dark-logo-tint {
+  filter: invert(0.92) hue-rotate(180deg) brightness(1.05) contrast(0.95);
+}
+[data-theme="light"] .dark-logo-tint {
+  filter: none;
+}
+
+/* Scrollbar styling, dark and light */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 6px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-strong);
 }
