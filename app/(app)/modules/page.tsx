@@ -60,7 +60,7 @@ export default function ModulesPage() {
               className={`rounded-lg border p-4 transition ${
                 disabled
                   ? "cursor-not-allowed border-neutral-800 bg-neutral-900 opacity-60"
-                  : "border-neutral-800 bg-neutral-900 hover:border-orange-500"
+                  : "border-neutral-800 bg-neutral-900 hover:border-border-strong"
               }`}
             >
               <div className="mb-1 flex items-center justify-between">

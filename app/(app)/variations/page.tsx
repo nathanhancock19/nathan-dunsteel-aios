@@ -33,7 +33,7 @@ export default async function VariationsPage() {
         </div>
         <Link
           href="/variations/new"
-          className="rounded-md border border-signal bg-signal/10 px-3 py-2 text-sm font-medium text-signal hover:bg-signal/20"
+          className="rounded-md border border-border-strong bg-highlight px-3 py-2 text-sm font-medium text-fg hover:bg-highlight/60"
         >
           New variation
         </Link>
@@ -56,7 +56,7 @@ export default async function VariationsPage() {
             <li key={v.id}>
               <Link
                 href={`/variations/${v.id}`}
-                className="block rounded-lg border border-rule bg-ink/40 p-3 hover:border-signal"
+                className="block rounded-lg border border-rule bg-ink/40 p-3 hover:border-border-strong"
               >
                 <div className="flex items-center justify-between">
                   <div>

@@ -7,8 +7,8 @@ export function DiaryEntryCard({ entry }: { entry: DiaryEntry }) {
       href={entry.url}
       target="_blank"
       rel="noreferrer"
-      className={`block rounded-lg border p-3 text-sm hover:border-signal ${
-        flag ? "border-signal/40 bg-signal/5" : "border-rule bg-ink/40"
+      className={`block rounded-lg border p-3 text-sm hover:border-border-strong ${
+        flag ? "border-border-strong bg-highlight" : "border-rule bg-ink/40"
       }`}
     >
       <div className="mb-1 flex items-center justify-between gap-2">

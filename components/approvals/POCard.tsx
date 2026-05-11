@@ -141,7 +141,7 @@ export function POCard({
               href={invoiceUrl}
               target="_blank"
               rel="noreferrer"
-              className="text-orange-500 hover:text-orange-400"
+              className="text-fg hover:text-fg"
             >
               View invoice PDF
             </a>
@@ -159,7 +159,7 @@ export function POCard({
       )}
 
       {suggestionLabel && !showAllocate && (
-        <p className="mb-3 text-xs text-signal/80">
+        <p className="mb-3 text-xs text-fg/80">
           Suggested: {suggestionLabel}
         </p>
       )}
@@ -197,7 +197,7 @@ export function POCard({
             <select
               value={jobScopeId}
               onChange={(e) => setJobScopeId(e.target.value)}
-              className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-2 py-1.5 text-xs text-neutral-100 focus:outline-none focus:ring-1 focus:ring-orange-500"
+              className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-2 py-1.5 text-xs text-neutral-100 focus:outline-none focus:ring-1 focus:ring-fg-muted"
             >
               <option value="">— Leave unchanged —</option>
               {jobScopeOptions.map((opt) => (
@@ -213,7 +213,7 @@ export function POCard({
             <select
               value={costCodeLabel}
               onChange={(e) => setCostCodeLabel(e.target.value)}
-              className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-2 py-1.5 text-xs text-neutral-100 focus:outline-none focus:ring-1 focus:ring-orange-500"
+              className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-2 py-1.5 text-xs text-neutral-100 focus:outline-none focus:ring-1 focus:ring-fg-muted"
             >
               <option value="">— Leave unchanged —</option>
               {costCodeOptions.map((opt) => (
@@ -258,7 +258,7 @@ export function POCard({
             onChange={(e) => setQueryMsg(e.target.value)}
             placeholder="What needs clarification? (optional)"
             rows={2}
-            className="w-full rounded-md border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm text-neutral-100 placeholder-neutral-600 focus:outline-none focus:ring-1 focus:ring-orange-500"
+            className="w-full rounded-md border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm text-neutral-100 placeholder-neutral-600 focus:outline-none focus:ring-1 focus:ring-fg-muted"
           />
           <div className="flex gap-2">
             <button
@@ -270,7 +270,7 @@ export function POCard({
                   setQueryMsg("")
                 })
               }
-              className="rounded-md bg-orange-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-orange-500 disabled:opacity-50"
+              className="rounded-md bg-fg px-3 py-1.5 text-xs font-medium text-white hover:bg-fg disabled:opacity-50"
             >
               {loading === "query" ? "Sending..." : "Send Query"}
             </button>

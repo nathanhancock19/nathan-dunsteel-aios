@@ -65,7 +65,7 @@ export default async function NcrPage() {
             href={p.webViewLink}
             target="_blank"
             rel="noreferrer"
-            className="block rounded-xl border border-rule bg-ink/40 p-2 hover:border-signal"
+            className="block rounded-xl border border-rule bg-ink/40 p-2 hover:border-border-strong"
           >
             {p.thumbnailLink ? (
               // eslint-disable-next-line @next/next/no-img-element

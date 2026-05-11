@@ -55,7 +55,7 @@ export function DeliveryCard({ delivery, onReceived, onDelayed, onNote }: Props)
       <p className="mb-3 text-xs text-neutral-500">{delivery.scheduledDate}</p>
 
       {delivery.status === "Delayed" && delivery.delayedReason && (
-        <p className="mb-3 text-xs text-orange-400">Delayed: {delivery.delayedReason}</p>
+        <p className="mb-3 text-xs text-fg">Delayed: {delivery.delayedReason}</p>
       )}
 
       {error && <p className="mb-2 text-xs text-red-400">{error}</p>}
@@ -105,7 +105,7 @@ export function DeliveryCard({ delivery, onReceived, onDelayed, onNote }: Props)
             onChange={(e) => setDelayReason(e.target.value)}
             placeholder="Reason for delay..."
             rows={2}
-            className="w-full rounded-md border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm text-neutral-100 placeholder-neutral-600 focus:outline-none focus:ring-1 focus:ring-orange-500"
+            className="w-full rounded-md border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm text-neutral-100 placeholder-neutral-600 focus:outline-none focus:ring-1 focus:ring-fg-muted"
           />
           <div className="flex gap-2">
             <button
@@ -117,7 +117,7 @@ export function DeliveryCard({ delivery, onReceived, onDelayed, onNote }: Props)
                   setDelayReason("")
                 })
               }
-              className="rounded-md bg-orange-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-orange-500 disabled:opacity-50"
+              className="rounded-md bg-fg px-3 py-1.5 text-xs font-medium text-white hover:bg-fg disabled:opacity-50"
             >
               {loading === "delayed" ? "Saving..." : "Confirm Delay"}
             </button>
@@ -138,7 +138,7 @@ export function DeliveryCard({ delivery, onReceived, onDelayed, onNote }: Props)
             onChange={(e) => setNoteText(e.target.value)}
             placeholder="Add a note..."
             rows={2}
-            className="w-full rounded-md border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm text-neutral-100 placeholder-neutral-600 focus:outline-none focus:ring-1 focus:ring-orange-500"
+            className="w-full rounded-md border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm text-neutral-100 placeholder-neutral-600 focus:outline-none focus:ring-1 focus:ring-fg-muted"
           />
           <div className="flex gap-2">
             <button

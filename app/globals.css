@@ -21,13 +21,17 @@
   --surface-2: #1D3A52;
   --surface-3: #294E6D;
   --border: #2A4A66;
-  --border-strong: #3B5C7A;
+  --border-strong: #4A6F8F;
   --fg: #F0F4F7;
   --fg-muted: #93A4B5;
   --fg-subtle: #647A8E;
-  --accent: #FFA300;
-  --accent-hover: #FFB733;
+  /* Accent: blue-tinted white in dark mode (high contrast, no orange) */
+  --accent: #FFFFFF;
+  --accent-hover: #DCE3EA;
   --accent-fg: #102536;
+  /* Subtle interactive highlight used on hover/active surfaces */
+  --highlight: #294E6D;
+  --highlight-strong: #4A6F8F;
   --success: #10B981;
   --warning: #F59E0B;
   --danger: #EF4444;
@@ -46,9 +50,12 @@
   --fg: #102536;
   --fg-muted: #4A5C6E;
   --fg-subtle: #8B9CAB;
-  --accent: #E68A00;
-  --accent-hover: #FFA300;
+  /* Accent: Dunsteel navy in light mode (high contrast, no orange) */
+  --accent: #1B3A52;
+  --accent-hover: #102536;
   --accent-fg: #FFFFFF;
+  --highlight: #E8EDF2;
+  --highlight-strong: #DCE3EA;
   --success: #059669;
   --warning: #D97706;
   --danger: #DC2626;

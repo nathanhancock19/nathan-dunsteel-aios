@@ -86,7 +86,7 @@ function ThemeOption({
         <div
           className={cn(
             "mt-2 ml-2 h-2 w-12 rounded-full",
-            preview === "dark" ? "bg-[#FFA300]" : "bg-[#E68A00]",
+            preview === "dark" ? "bg-[#1B3A52]" : "bg-[#1B3A52]",
           )}
         />
         <div className="ml-2 mt-1 flex gap-1">

@@ -43,7 +43,7 @@ export function QuoteCard({ quote, onApprove, onReject }: Props) {
     <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-4">
       <div className="mb-1 flex items-start justify-between gap-2">
         <p className="text-sm font-semibold text-neutral-100">{quote.supplier}</p>
-        <span className="shrink-0 text-sm font-medium text-orange-400">
+        <span className="shrink-0 text-sm font-medium text-fg">
           {formatCurrency(quote.amount)}
         </span>
       </div>

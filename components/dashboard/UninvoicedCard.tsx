@@ -21,7 +21,7 @@ export async function UninvoicedCard() {
     const recent = entries.slice(0, 5)
     return (
       <Card title="Uninvoiced subcon" subtitle="411">
-        <p className="text-2xl font-semibold tracking-tight text-signal">{entries.length}</p>
+        <p className="text-2xl font-semibold tracking-tight text-fg">{entries.length}</p>
         <p className="mt-0.5 text-[11px] uppercase tracking-wider text-muted">entries pending</p>
         {recent.length > 0 ? (
           <ul className="mt-3 space-y-1 text-xs text-muted">

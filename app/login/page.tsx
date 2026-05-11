@@ -53,7 +53,7 @@ function LoginForm() {
       {/* subtle gradient orb behind the card */}
       <div
         className="pointer-events-none absolute left-1/2 top-1/3 -z-0 h-96 w-96 -translate-x-1/2 -translate-y-1/2 rounded-full opacity-30 blur-3xl"
-        style={{ background: "radial-gradient(circle, #FFA300 0%, transparent 70%)" }}
+        style={{ background: "radial-gradient(circle, #1B3A52 0%, transparent 70%)" }}
         aria-hidden
       />
 
@@ -90,7 +90,7 @@ function LoginForm() {
               onChange={(e) => setUsername(e.target.value)}
               className="w-full rounded-md border px-3 py-2 text-sm outline-none transition-colors"
               style={{ background: "#0F2030", borderColor: "#2A4A66", color: "#F0F4F7" }}
-              onFocus={(e) => (e.target.style.borderColor = "#FFA300")}
+              onFocus={(e) => (e.target.style.borderColor = "#1B3A52")}
               onBlur={(e) => (e.target.style.borderColor = "#2A4A66")}
             />
           </div>
@@ -109,7 +109,7 @@ function LoginForm() {
               onChange={(e) => setPassword(e.target.value)}
               className="w-full rounded-md border px-3 py-2 text-sm outline-none transition-colors"
               style={{ background: "#0F2030", borderColor: "#2A4A66", color: "#F0F4F7" }}
-              onFocus={(e) => (e.target.style.borderColor = "#FFA300")}
+              onFocus={(e) => (e.target.style.borderColor = "#1B3A52")}
               onBlur={(e) => (e.target.style.borderColor = "#2A4A66")}
             />
           </div>
@@ -124,7 +124,7 @@ function LoginForm() {
             type="submit"
             disabled={pending}
             className="mt-2 flex w-full items-center justify-center gap-2 rounded-md px-3 py-2 text-sm font-semibold transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-            style={{ background: "#FFA300", color: "#102536" }}
+            style={{ background: "#1B3A52", color: "#102536" }}
           >
             {pending ? "Signing in..." : (
               <>

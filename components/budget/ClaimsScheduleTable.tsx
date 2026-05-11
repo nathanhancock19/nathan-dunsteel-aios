@@ -62,7 +62,7 @@ export async function ClaimsScheduleTable() {
             <th className="px-3 py-2 text-right font-semibold text-cream">Remaining</th>
             <th className="px-3 py-2 text-right font-semibold text-cream">Claimed</th>
             {showMonths.map((m) => (
-              <th key={m} className={`px-2 py-2 text-right font-semibold ${m === currentYm ? "bg-signal/10 text-signal" : "text-muted"}`}>
+              <th key={m} className={`px-2 py-2 text-right font-semibold ${m === currentYm ? "bg-highlight text-fg" : "text-muted"}`}>
                 {formatYearMonthShort(m)}
               </th>
             ))}
@@ -72,7 +72,7 @@ export async function ClaimsScheduleTable() {
           {scopes.map((s) => (
             <tr key={s.scopeName} className={`border-t border-rule/50 ${s.isVariation ? "bg-rule/10" : ""}`}>
               <td className="sticky left-0 z-10 bg-ink px-3 py-1.5 text-cream">
-                {s.isVariation ? <span className="mr-1 text-signal">VAR</span> : null}
+                {s.isVariation ? <span className="mr-1 text-fg">VAR</span> : null}
                 {s.scopeName}
               </td>
               <td className="px-3 py-1.5 text-right text-cream">{formatCurrency(s.scopeValue)}</td>
@@ -83,7 +83,7 @@ export async function ClaimsScheduleTable() {
                 return (
                   <td
                     key={m}
-                    className={`px-2 py-1.5 text-right text-muted ${m === currentYm ? "bg-signal/5" : ""}`}
+                    className={`px-2 py-1.5 text-right text-muted ${m === currentYm ? "bg-highlight" : ""}`}
                     title={c?.remainingValue != null ? `Remaining ${formatCurrency(c.remainingValue)}` : undefined}
                   >
                     {c?.claimedPct != null ? formatPct(c.claimedPct) : c?.remainingValue != null ? formatCurrency(c.remainingValue) : "-"}

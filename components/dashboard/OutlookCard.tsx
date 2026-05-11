@@ -27,12 +27,12 @@ export async function OutlookCard() {
                 href={m.webLink}
                 target="_blank"
                 rel="noreferrer"
-                className="block rounded border border-rule/50 bg-ink/40 p-2 hover:border-signal"
+                className="block rounded border border-rule/50 bg-ink/40 p-2 hover:border-border-strong"
               >
                 <div className="flex items-center justify-between gap-2">
                   <span className="truncate text-cream">{m.subject || "(no subject)"}</span>
                   {m.categories.length > 0 ? (
-                    <span className="text-[10px] uppercase tracking-wider text-signal">{m.categories[0]}</span>
+                    <span className="text-[10px] uppercase tracking-wider text-fg">{m.categories[0]}</span>
                   ) : null}
                 </div>
                 <p className="mt-0.5 truncate text-xs text-muted">{m.from}</p>

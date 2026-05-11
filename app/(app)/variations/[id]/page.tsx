@@ -39,7 +39,7 @@ export default async function VariationDetailPage({ params }: { params: Promise<
           <p className="text-xs uppercase tracking-wider text-muted">{v.variationNumber} - {v.status}</p>
           <h1 className="mt-1 text-2xl font-semibold tracking-tight text-cream">{v.title}</h1>
         </div>
-        <Link href="/variations" className="text-xs text-muted hover:text-signal">
+        <Link href="/variations" className="text-xs text-muted hover:text-fg">
           Back to list
         </Link>
       </div>

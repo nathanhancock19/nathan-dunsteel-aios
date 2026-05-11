@@ -31,7 +31,7 @@ export function RefreshMerButton() {
       <button
         onClick={refresh}
         disabled={pending}
-        className="rounded-md border border-rule px-3 py-1 text-xs font-medium text-cream hover:border-signal disabled:opacity-50"
+        className="rounded-md border border-rule px-3 py-1 text-xs font-medium text-cream hover:border-border-strong disabled:opacity-50"
       >
         {pending ? "Syncing..." : "Sync MER now"}
       </button>

@@ -170,7 +170,7 @@ export function AssistantPanel() {
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-label={open ? "Close AI assistant" : "Open AI assistant (Cmd+K)"}
-        className="fixed bottom-4 right-4 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-signal text-ink shadow-lg transition hover:bg-signal-300"
+        className="fixed bottom-4 right-4 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-fg text-ink shadow-lg transition hover:bg-fg-300"
       >
         {open ? "X" : "AI"}
       </button>
@@ -230,7 +230,7 @@ export function AssistantPanel() {
             ))}
 
             {toolNote ? (
-              <p className="text-xs italic text-signal">{toolNote}</p>
+              <p className="text-xs italic text-fg">{toolNote}</p>
             ) : null}
           </div>
 
@@ -243,12 +243,12 @@ export function AssistantPanel() {
                 placeholder={pending ? "Thinking..." : "Ask anything..."}
                 disabled={pending}
                 data-assistant-input="true"
-                className="flex-1 rounded-md border border-rule bg-ink px-3 py-2 text-sm text-cream outline-none focus:border-signal disabled:opacity-50"
+                className="flex-1 rounded-md border border-rule bg-ink px-3 py-2 text-sm text-cream outline-none focus:border-border-strong disabled:opacity-50"
               />
               <button
                 type="submit"
                 disabled={pending || !input.trim()}
-                className="rounded-md bg-signal px-3 py-2 text-sm font-semibold text-ink transition hover:bg-signal-300 disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-md bg-fg px-3 py-2 text-sm font-semibold text-ink transition hover:bg-fg-300 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Send
               </button>

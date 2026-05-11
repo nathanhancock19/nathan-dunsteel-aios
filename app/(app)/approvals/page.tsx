@@ -108,7 +108,7 @@ export default async function ApprovalsPage() {
       <div className="mb-6">
         <h1 className="text-lg font-semibold text-neutral-100">Approvals</h1>
         {totalPending > 0 && (
-          <p className="text-sm text-orange-400">
+          <p className="text-sm text-fg">
             {totalPending} item{totalPending !== 1 ? "s" : ""} waiting on you
           </p>
         )}

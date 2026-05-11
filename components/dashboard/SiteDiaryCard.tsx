@@ -27,7 +27,7 @@ export async function SiteDiaryCard() {
                 href={e.url}
                 target="_blank"
                 rel="noreferrer"
-                className="text-neutral-200 hover:text-orange-400"
+                className="text-neutral-200 hover:text-fg"
               >
                 {e.title}
               </a>

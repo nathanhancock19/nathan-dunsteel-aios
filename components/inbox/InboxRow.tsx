@@ -32,7 +32,7 @@ export function InboxRow({ item, state, onChange }: Props) {
   function actionWrapper(href: string, label: string, variant?: string) {
     const className =
       variant === "primary"
-        ? "rounded-md bg-signal px-3 py-1.5 text-xs font-medium text-ink hover:bg-signal-300"
+        ? "rounded-md bg-fg px-3 py-1.5 text-xs font-medium text-ink hover:bg-fg-300"
         : "rounded-md border border-rule px-3 py-1.5 text-xs font-medium text-cream hover:border-muted"
     if (isExternal(href)) {
       return (

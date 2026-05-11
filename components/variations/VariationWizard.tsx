@@ -112,7 +112,7 @@ export function VariationWizard() {
             <button
               disabled={!variationNumber || !title}
               onClick={() => setStep(2)}
-              className="rounded-md border border-signal bg-signal/10 px-4 py-2 text-sm font-medium text-signal disabled:opacity-50"
+              className="rounded-md border border-border-strong bg-highlight px-4 py-2 text-sm font-medium text-fg disabled:opacity-50"
             >
               Next
             </button>
@@ -190,7 +190,7 @@ export function VariationWizard() {
             </tbody>
           </table>
           <div className="flex items-center justify-between">
-            <button onClick={addLine} className="text-xs text-signal hover:underline">
+            <button onClick={addLine} className="text-xs text-fg hover:underline">
               + Add line
             </button>
             <div className="flex gap-2">
@@ -200,7 +200,7 @@ export function VariationWizard() {
               <button
                 disabled={lines.every((l) => !l.description)}
                 onClick={() => setStep(3)}
-                className="rounded-md border border-signal bg-signal/10 px-4 py-2 text-sm font-medium text-signal disabled:opacity-50"
+                className="rounded-md border border-border-strong bg-highlight px-4 py-2 text-sm font-medium text-fg disabled:opacity-50"
               >
                 Review
               </button>
@@ -238,7 +238,7 @@ export function VariationWizard() {
             <button
               disabled={pending}
               onClick={submit}
-              className="rounded-md border border-signal bg-signal/10 px-4 py-2 text-sm font-medium text-signal disabled:opacity-50"
+              className="rounded-md border border-border-strong bg-highlight px-4 py-2 text-sm font-medium text-fg disabled:opacity-50"
             >
               {pending ? "Creating..." : "Create variation"}
             </button>
@@ -253,7 +253,7 @@ function StepBadge({ active, done, label }: { active: boolean; done: boolean; la
   return (
     <span
       className={`rounded px-2 py-1 ${
-        done ? "bg-emerald-500/20 text-emerald-300" : active ? "bg-signal/20 text-signal" : "bg-rule/20 text-muted"
+        done ? "bg-emerald-500/20 text-emerald-300" : active ? "bg-highlight/60 text-fg" : "bg-rule/20 text-muted"
       }`}
     >
       {label}

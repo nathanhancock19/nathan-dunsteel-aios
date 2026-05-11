@@ -43,7 +43,7 @@ async function DefectsList() {
             href={d.url}
             target="_blank"
             rel="noreferrer"
-            className="block rounded-lg border border-rule bg-ink/40 p-3 text-sm hover:border-signal"
+            className="block rounded-lg border border-rule bg-ink/40 p-3 text-sm hover:border-border-strong"
           >
             <div className="mb-1 flex items-center justify-between gap-2">
               <span className="font-medium text-cream">{d.title}</span>
@@ -78,9 +78,17 @@ export default function DefectsPage() {
   const project = process.env.AIOS_PRIMARY_PROJECT_NUMBER ?? "411"
   return (
     <section className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-cream">Project {project} Defects</h1>
-        <p className="mt-1 text-sm text-muted">Defects register from Notion.</p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight text-fg">Project {project} Defects</h1>
+          <p className="mt-1 text-sm text-fg-muted">Defects register from Notion.</p>
+        </div>
+        <a
+          href="/defects/dashboard"
+          className="rounded-md border border-border bg-surface px-3 py-1.5 text-xs text-fg-muted hover:border-border-strong hover:text-fg"
+        >
+          View NCR analytics dashboard &rarr;
+        </a>
       </div>
       <Suspense fallback={<div className="h-20 animate-pulse rounded-xl bg-rule/20" />}>
         <SummaryStrip />
