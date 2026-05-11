@@ -1,31 +1,45 @@
 import Image from "next/image"
+import { cn } from "@/lib/utils/cn"
 
 /**
- * Dunsteel logo. The JPG source is steel-navy on transparent white. In
- * dark mode we drop it on a slightly lighter chip; in light mode it sits
- * naturally on the surface.
+ * Dunsteel mark.
+ *
+ * Always renders the same: navy mark on a white rounded chip. Identical in
+ * both themes; no filter trickery. The chip gives it a clean, polished
+ * presentation regardless of surrounding surface colour.
  */
 export function Logo({
   size = "md",
-  showWordmark = true,
+  showName = true,
   className,
 }: {
   size?: "sm" | "md" | "lg"
-  showWordmark?: boolean
+  showName?: boolean
   className?: string
 }) {
-  const heights = { sm: 28, md: 36, lg: 56 }
-  const widths = { sm: 100, md: 130, lg: 200 }
+  const dims = { sm: 28, md: 32, lg: 44 }
+  const dim = dims[size]
   return (
-    <div className={`inline-flex items-center ${className ?? ""}`}>
-      <Image
-        src="/logo.png"
-        alt="Dunsteel"
-        width={showWordmark ? widths[size] : heights[size]}
-        height={heights[size]}
-        priority
-        className="dark-logo-tint"
-      />
+    <div className={cn("inline-flex items-center gap-2.5", className)}>
+      <div
+        className="flex items-center justify-center overflow-hidden rounded-lg bg-white"
+        style={{ width: dim, height: dim, boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}
+      >
+        <Image
+          src="/logo-mark.png"
+          alt="Dunsteel"
+          width={dim - 4}
+          height={dim - 4}
+          priority
+          className="object-contain"
+        />
+      </div>
+      {showName ? (
+        <div className="leading-tight">
+          <p className="text-sm font-semibold tracking-tight text-fg">Dunsteel</p>
+          <p className="text-[10px] uppercase tracking-wider text-fg-subtle">AIOS</p>
+        </div>
+      ) : null}
     </div>
   )
 }

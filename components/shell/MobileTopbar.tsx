@@ -18,7 +18,7 @@ export function MobileTopbar({ name, role }: { name: string; role?: string }) {
         >
           <Menu className="h-5 w-5" />
         </button>
-        <Logo size="sm" showWordmark className="h-7" />
+        <Logo size="sm" showName className="h-7" />
         <div className="w-9" aria-hidden />
       </header>
 

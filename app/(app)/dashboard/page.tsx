@@ -7,9 +7,8 @@ import { DiaryTodayCard } from "@/components/dashboard/DiaryTodayCard"
 import { DeliveriesCard } from "@/components/dashboard/DeliveriesCard"
 import { DefectsCard } from "@/components/dashboard/DefectsCard"
 import { NotesCard } from "@/components/dashboard/NotesCard"
-import { UninvoicedCard } from "@/components/dashboard/UninvoicedCard"
 import { ClaimsSummaryCard } from "@/components/budget/ClaimsSummaryCard"
-import { Card } from "@/components/dashboard/Card"
+import { CardSkeleton } from "@/components/ui/Skeleton"
 import { DashboardTabs } from "@/components/dashboard/DashboardTabs"
 import { Inbox } from "@/components/inbox/Inbox"
 
@@ -21,37 +20,33 @@ export default async function DashboardPage() {
 
   const snapshot = (
     <div className="space-y-4">
-      <Suspense fallback={<Skeleton title="Budget (claims)" />}>
+      <Suspense fallback={<CardSkeleton rows={2} />}>
         <ClaimsSummaryCard variant="compact" />
       </Suspense>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <Suspense fallback={<Skeleton title="Diary today" />}>
+        <Suspense fallback={<CardSkeleton />}>
           <DiaryTodayCard />
         </Suspense>
 
-        <Suspense fallback={<Skeleton title="Defects" />}>
+        <Suspense fallback={<CardSkeleton />}>
           <DefectsCard />
         </Suspense>
 
-        <Suspense fallback={<Skeleton title="High priority notes" />}>
+        <Suspense fallback={<CardSkeleton />}>
           <NotesCard />
         </Suspense>
 
-        <Suspense fallback={<Skeleton title="Today on site" />}>
+        <Suspense fallback={<CardSkeleton />}>
           <SiteActivityCard />
         </Suspense>
 
-        <Suspense fallback={<Skeleton title="Deliveries today" />}>
+        <Suspense fallback={<CardSkeleton />}>
           <DeliveriesCard />
         </Suspense>
 
-        <Suspense fallback={<Skeleton title="POs awaiting approval" />}>
+        <Suspense fallback={<CardSkeleton />}>
           <POApprovalsCard />
-        </Suspense>
-
-        <Suspense fallback={<Skeleton title="Uninvoiced subcon" />}>
-          <UninvoicedCard />
         </Suspense>
       </div>
     </div>
@@ -62,13 +57,5 @@ export default async function DashboardPage() {
       <TodayBar name={name} />
       <DashboardTabs inbox={<Inbox />} snapshot={snapshot} />
     </div>
-  )
-}
-
-function Skeleton({ title }: { title: string }) {
-  return (
-    <Card title={title}>
-      <div className="h-12 animate-pulse rounded bg-neutral-800/60" />
-    </Card>
   )
 }

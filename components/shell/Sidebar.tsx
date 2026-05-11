@@ -72,9 +72,9 @@ export function Sidebar({
     >
       <div className="flex h-14 items-center justify-between border-b border-border px-3">
         {expanded ? (
-          <Logo size="sm" showWordmark className="h-7" />
+          <Logo size="sm" showName className="h-7" />
         ) : (
-          <Logo size="sm" showWordmark={false} className="h-7" />
+          <Logo size="sm" showName={false} className="h-7" />
         )}
         {!forceMobile ? (
           <button

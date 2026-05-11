@@ -37,14 +37,14 @@
 }
 
 [data-theme="light"] {
-  --bg: #F2F5F8;
+  --bg: #FFFFFF;
   --surface: #FFFFFF;
-  --surface-2: #F7F9FB;
-  --surface-3: #EDF2F6;
+  --surface-2: #F4F6F9;
+  --surface-3: #E8EDF2;
   --border: #DCE3EA;
   --border-strong: #B6C3CE;
-  --fg: #0F2030;
-  --fg-muted: #5A6C7D;
+  --fg: #102536;
+  --fg-muted: #4A5C6E;
   --fg-subtle: #8B9CAB;
   --accent: #E68A00;
   --accent-hover: #FFA300;
@@ -53,7 +53,7 @@
   --warning: #D97706;
   --danger: #DC2626;
   --danger-fg: #FFFFFF;
-  --steel-700: #D5DCE2;
+  --steel-700: #DCE3EA;
   --steel-800: #1B3A52;
 }
 
@@ -101,18 +101,6 @@ body {
     background: var(--accent);
     color: var(--accent-fg);
   }
-}
-
-/*
- * Logo is sourced from a JPG which has a white background and dark-navy mark.
- * In dark mode that white background is jarring. Apply a light-on-dark
- * compositing trick: multiply blend mode tints the white -> bg colour.
- */
-[data-theme="dark"] .dark-logo-tint {
-  filter: invert(0.92) hue-rotate(180deg) brightness(1.05) contrast(0.95);
-}
-[data-theme="light"] .dark-logo-tint {
-  filter: none;
 }
 
 /* Scrollbar styling, dark and light */
