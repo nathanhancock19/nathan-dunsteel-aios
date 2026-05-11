@@ -20,22 +20,32 @@ export function notion(): Client {
 }
 
 /**
- * Notion v5 wrapped each database in a "data source" abstraction.
- * For a normal database, the data source ID is found by retrieving the DB.
- * Cached per database ID.
+ * Resolve a Notion data source ID.
+ *
+ * Notion v5 split databases into data sources. Our discovery script (and
+ * the Notion v5 search API with filter:data_source) returns data_source
+ * IDs, which is what we store in env vars (NOTION_*_DB).
+ *
+ * Strategy: try treating the input as a database ID first (works for legacy
+ * v3 IDs); on 404 fall back to using the input as a data_source ID directly.
+ * Result is cached.
  */
 const dataSourceCache = new Map<string, string>()
-export async function getDataSourceId(databaseId: string): Promise<string> {
-  const cached = dataSourceCache.get(databaseId)
+export async function getDataSourceId(idFromEnv: string): Promise<string> {
+  const cached = dataSourceCache.get(idFromEnv)
   if (cached) return cached
-  const client = notion()
-  const db = await client.databases.retrieve({ database_id: databaseId })
-  let id = databaseId
-  if ("data_sources" in db && Array.isArray(db.data_sources) && db.data_sources[0]) {
-    id = db.data_sources[0].id
+  try {
+    const db = await notion().databases.retrieve({ database_id: idFromEnv })
+    if ("data_sources" in db && Array.isArray(db.data_sources) && db.data_sources[0]) {
+      const id = db.data_sources[0].id
+      dataSourceCache.set(idFromEnv, id)
+      return id
+    }
+  } catch {
+    // Not a database ID -- assume it's already a data source ID
   }
-  dataSourceCache.set(databaseId, id)
-  return id
+  dataSourceCache.set(idFromEnv, idFromEnv)
+  return idFromEnv
 }
 
 /**
