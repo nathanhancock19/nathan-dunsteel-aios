@@ -1,2 +1,7 @@
 export * from "./client"
 export * from "./forecast"
+export * from "./helpers"
+export * from "./diary"
+export * from "./voice-memos"
+export * from "./defects"
+export * from "./general-notes"

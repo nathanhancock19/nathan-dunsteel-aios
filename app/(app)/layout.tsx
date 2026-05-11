@@ -3,6 +3,7 @@ import { redirect } from "next/navigation"
 import Link from "next/link"
 import { ReactNode } from "react"
 import { AssistantPanel } from "@/components/assistant/AssistantPanel"
+import { QuickNoteButton } from "@/components/quick-actions/QuickNoteButton"
 
 async function signOutAction() {
   "use server"
@@ -21,10 +22,15 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
             <span className="inline-block h-2 w-2 rounded-full bg-signal" aria-hidden />
             <span>Dunsteel PM AIOS</span>
           </Link>
-          <nav className="flex items-center gap-4 text-xs font-medium uppercase tracking-wider text-muted sm:text-[11px]">
+          <nav className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-medium uppercase tracking-wider text-muted sm:text-[11px]">
             <Link href="/dashboard" className="hover:text-cream">Dashboard</Link>
+            <Link href="/budget" className="hover:text-cream">Budget</Link>
+            <Link href="/diary" className="hover:text-cream">Diary</Link>
+            <Link href="/defects" className="hover:text-cream">Defects</Link>
+            <Link href="/variations" className="hover:text-cream">Variations</Link>
             <Link href="/deliveries" className="hover:text-cream">Deliveries</Link>
             <Link href="/approvals" className="hover:text-cream">Approvals</Link>
+            <Link href="/ncr" className="hover:text-cream">NCR</Link>
             <Link href="/projects" className="hover:text-cream">Projects</Link>
             <Link href="/modules" className="hover:text-cream">Modules</Link>
           </nav>
@@ -42,6 +48,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
         </div>
       </header>
       <main className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-8">{children}</main>
+      <QuickNoteButton />
       <AssistantPanel />
     </div>
   )

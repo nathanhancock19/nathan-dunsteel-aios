@@ -15,6 +15,21 @@ import { getProjectForecast } from "@/lib/notion/forecast"
 import { changeColumnValue } from "@/lib/monday"
 import { logDecision } from "@/lib/decisions/log"
 import { runInbox } from "@/lib/inbox"
+import {
+  getDiaryEntriesForDate,
+  getRecentDiaryEntries,
+  getDiaryFlaggedEntries,
+  getUninvoicedSubconEntries,
+} from "@/lib/notion/diary"
+import { getDefectsSummary, getDefectsList, getOpenHighSeverityDefects } from "@/lib/notion/defects"
+import { getHighPriorityNotes, getGeneralNotes } from "@/lib/notion/general-notes"
+import { getPendingVoiceMemos } from "@/lib/notion/voice-memos"
+import { addGeneralNote, markDefectStatus } from "@/lib/notion/write"
+import { getMerSummary, getMerScopes, getMerClaimsForMonth, getMerSyncStatus } from "@/lib/strumis/queries"
+import { listWorkflows, getRecentFailures } from "@/lib/n8n/client"
+import { getCategorisedMessages, outlookConfigured } from "@/lib/outlook/client"
+import { listVariations, createVariationDraft } from "@/lib/airtable/variations"
+import { getNcrSummary } from "@/lib/drive/ncr"
 import type Anthropic from "@anthropic-ai/sdk"
 
 type ToolDefinition = Anthropic.Tool
@@ -68,6 +83,40 @@ export const logDecisionSchema = z.object({
     .describe("e.g. 'note', 'commitment', 'reminder'. Use 'note' as default."),
   subject: z.string().optional().describe("Person or project this decision is about, if applicable."),
   body: z.string().min(1).describe("Free-form text describing what happened or what was decided."),
+})
+
+export const queryDiaryDateSchema = z.object({
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+})
+export const queryClaimsForMonthSchema = z.object({
+  yearMonth: z.string().regex(/^\d{4}-\d{2}$/).optional(),
+})
+export const queryDefectsListSchema = z.object({
+  status: z.string().optional(),
+  limit: z.number().int().min(1).max(50).default(10),
+})
+export const queryNotesSchema = z.object({
+  category: z.string().optional(),
+  priority: z.enum(["Low", "Medium", "High"]).optional(),
+  status: z.string().optional(),
+  limit: z.number().int().min(1).max(50).default(10),
+})
+export const addNoteSchema = z.object({
+  title: z.string().min(1).max(200),
+  body: z.string().max(5000).optional(),
+  category: z.string().optional(),
+  priority: z.enum(["Low", "Medium", "High"]).optional(),
+  confirmed: z.literal(true),
+})
+export const markDefectSchema = z.object({
+  pageId: z.string().min(1),
+  status: z.string().min(1),
+  confirmed: z.literal(true),
+})
+export const createVariationSchema = z.object({
+  variationNumber: z.string().min(1).max(20),
+  title: z.string().min(1).max(200),
+  confirmed: z.literal(true),
 })
 
 export const tools: ToolDefinition[] = [
@@ -220,6 +269,186 @@ export const tools: ToolDefinition[] = [
         },
       },
       required: ["category", "body"],
+    } as Anthropic.Tool["input_schema"],
+  },
+
+  // ===== Diary tools =====
+  {
+    name: "query_diary_today",
+    description:
+      "Get today's site diary entries (Performance Site Diary + Subcontractors Diary) for the user's primary project. Returns work completed, weather, hours lost, crew, plus safety incident / builder delay flags. Use when asked 'what happened today on site', 'today's diary', or summarising the day.",
+    input_schema: { type: "object", properties: { date: { type: "string", description: "YYYY-MM-DD; defaults to today." } }, required: [] } as Anthropic.Tool["input_schema"],
+  },
+  {
+    name: "query_diary_recent",
+    description: "Get recent (last ~10) site diary entries across both diaries. Use for 'what's been happening this week' or 'recent diary' queries.",
+    input_schema: { type: "object", properties: {}, required: [] } as Anthropic.Tool["input_schema"],
+  },
+  {
+    name: "query_diary_flagged",
+    description: "Get diary entries from the last 14 days flagged for safety incident or builder delay. Use when asked about risks, incidents, or what's gone wrong.",
+    input_schema: { type: "object", properties: {}, required: [] } as Anthropic.Tool["input_schema"],
+  },
+  {
+    name: "query_voice_memos_pending",
+    description: "List voice memos in the central Voice Memo Log that are awaiting compilation (status Received / Pending / Processing). Use to confirm whether all today's WhatsApp memos have been picked up.",
+    input_schema: { type: "object", properties: {}, required: [] } as Anthropic.Tool["input_schema"],
+  },
+
+  // ===== Defects tools =====
+  {
+    name: "query_defects_summary",
+    description: "Get summary counts of defects on Project 411: total, by status, by severity, and total cost impact. Use for 'how many defects' / 'overall defects state' queries.",
+    input_schema: { type: "object", properties: {}, required: [] } as Anthropic.Tool["input_schema"],
+  },
+  {
+    name: "query_defects_open",
+    description: "List currently open high-severity defects on Project 411 (severity High/Critical, status not Rectified or Deferred). Use when asked 'what defects need attention' or 'biggest defects to fix'.",
+    input_schema: { type: "object", properties: {}, required: [] } as Anthropic.Tool["input_schema"],
+  },
+  {
+    name: "query_defects_list",
+    description: "List defects on Project 411 with optional status filter. Use for queries about specific defects or recent additions.",
+    input_schema: {
+      type: "object",
+      properties: {
+        status: { type: "string", description: "Filter (e.g. Identified, In Progress, Rectified, Deferred)." },
+        limit: { type: "integer", description: "Max records, default 10." },
+      },
+      required: [],
+    } as Anthropic.Tool["input_schema"],
+  },
+
+  // ===== Notes tools =====
+  {
+    name: "query_high_priority_notes",
+    description: "Get the user's high-priority notes from Notion General Notes for their primary project (excludes Done items). Use when asked 'what's on my plate' or 'high priority items'.",
+    input_schema: { type: "object", properties: {}, required: [] } as Anthropic.Tool["input_schema"],
+  },
+  {
+    name: "query_notes",
+    description: "List Notion General Notes filtered by category/priority/status for the user's primary project. Use for category-specific queries (e.g. 'Safety notes', 'In Progress Commercial items').",
+    input_schema: {
+      type: "object",
+      properties: {
+        category: { type: "string" },
+        priority: { type: "string", enum: ["Low", "Medium", "High"] },
+        status: { type: "string" },
+        limit: { type: "integer" },
+      },
+      required: [],
+    } as Anthropic.Tool["input_schema"],
+  },
+
+  // ===== Subcon billing tool =====
+  {
+    name: "query_uninvoiced_subcon",
+    description: "List Dunsteel Subcontractors Diary entries marked Not Invoiced. Use when chasing billing or asked 'what subcon entries are still pending invoice'.",
+    input_schema: { type: "object", properties: {}, required: [] } as Anthropic.Tool["input_schema"],
+  },
+
+  // ===== Budget / MER tools (claims/revenue side) =====
+  {
+    name: "query_claims_summary",
+    description: "Get the MER claims summary for the user's primary project: total contract value, claimed to date, remaining, claimed this month, variations count and value. Use for 'how am I tracking on claims', 'overall budget claims position'.",
+    input_schema: { type: "object", properties: {}, required: [] } as Anthropic.Tool["input_schema"],
+  },
+  {
+    name: "query_claims_for_month",
+    description: "Get the MER claims schedule for a specific month (year-month, e.g. '2026-05'). Returns each scope's planned claim percentage and remaining value for that month. Use for forward-looking questions about expected revenue.",
+    input_schema: {
+      type: "object",
+      properties: { yearMonth: { type: "string", description: "YYYY-MM format (e.g. 2026-05). Defaults to current month." } },
+      required: [],
+    } as Anthropic.Tool["input_schema"],
+  },
+  {
+    name: "query_claims_scopes",
+    description: "List all scopes in the MER for the user's primary project with overall value, claimed % to date, and remaining value. Includes variations (V01-V14) flagged separately.",
+    input_schema: { type: "object", properties: {}, required: [] } as Anthropic.Tool["input_schema"],
+  },
+  {
+    name: "query_mer_sync_status",
+    description: "Check when the MER was last synced from the Google Sheet. Use to verify freshness before quoting claims figures.",
+    input_schema: { type: "object", properties: {}, required: [] } as Anthropic.Tool["input_schema"],
+  },
+
+  // ===== n8n workflow tools =====
+  {
+    name: "query_n8n_workflows",
+    description: "List Dunsteel n8n workflows with active/inactive state. Use for system health questions about automation pipelines (voice diary, SWMS, WF5, NCR, workshop, deliveries).",
+    input_schema: { type: "object", properties: {}, required: [] } as Anthropic.Tool["input_schema"],
+  },
+  {
+    name: "query_n8n_failures",
+    description: "List recent failed n8n workflow executions. Use when asked 'what's broken' or 'any pipeline failures'.",
+    input_schema: { type: "object", properties: {}, required: [] } as Anthropic.Tool["input_schema"],
+  },
+
+  // ===== Outlook tools (graceful degrade) =====
+  {
+    name: "query_outlook_flagged",
+    description: "List Outlook emails flagged 'Needs Reply', 'To Be Discussed' or 'Urgent' (categorised by Nathan). If Outlook integration is not configured, returns an empty list with a configured: false flag.",
+    input_schema: { type: "object", properties: {}, required: [] } as Anthropic.Tool["input_schema"],
+  },
+
+  // ===== Variations tools =====
+  {
+    name: "query_variations",
+    description: "List variations submitted/pending for the user's primary project, with status and total. Use for 'what variations are open' or 'my variation pipeline' queries.",
+    input_schema: { type: "object", properties: {}, required: [] } as Anthropic.Tool["input_schema"],
+  },
+  {
+    name: "create_variation_draft",
+    description:
+      "Create a new variation draft in Airtable with just a number and title (no line items yet). WRITE TOOL: only invoke after user explicitly confirms (e.g. 'yes create it'). Always pass confirmed: true. Caller must add line items via the /variations UI afterwards.",
+    input_schema: {
+      type: "object",
+      properties: {
+        variationNumber: { type: "string", description: "e.g. V-411-016" },
+        title: { type: "string", description: "Short title visible to AW Edwards" },
+        confirmed: { type: "boolean", description: "Always true. Caller has confirmed with user." },
+      },
+      required: ["variationNumber", "title", "confirmed"],
+    } as Anthropic.Tool["input_schema"],
+  },
+
+  // ===== NCR tools =====
+  {
+    name: "query_ncr_summary",
+    description: "Get summary of NCR photos captured via WhatsApp -> Drive: total count plus breakdown by parsed defect type. Use for end-of-job review or 'what defects are most common'.",
+    input_schema: { type: "object", properties: {}, required: [] } as Anthropic.Tool["input_schema"],
+  },
+
+  // ===== Notion write tools =====
+  {
+    name: "add_note_to_notion",
+    description:
+      "Append a note to the Notion General Notes database for the user's primary project. WRITE TOOL: only invoke after the user explicitly confirms wording. Always pass confirmed: true.",
+    input_schema: {
+      type: "object",
+      properties: {
+        title: { type: "string" },
+        body: { type: "string" },
+        category: { type: "string", description: "Optional: General/Site/Commercial/Delivery/Safety/QA/Programme/Costing." },
+        priority: { type: "string", enum: ["Low", "Medium", "High"] },
+        confirmed: { type: "boolean" },
+      },
+      required: ["title", "confirmed"],
+    } as Anthropic.Tool["input_schema"],
+  },
+  {
+    name: "mark_defect_status",
+    description:
+      "Update a defect's Status field (e.g. Rectified, In Progress, Deferred). WRITE TOOL: confirm with user first. Always pass confirmed: true.",
+    input_schema: {
+      type: "object",
+      properties: {
+        pageId: { type: "string", description: "Notion page ID of the defect." },
+        status: { type: "string", description: "New status, e.g. Rectified." },
+        confirmed: { type: "boolean" },
+      },
+      required: ["pageId", "status", "confirmed"],
     } as Anthropic.Tool["input_schema"],
   },
 ]
@@ -445,6 +674,165 @@ export async function runTool(name: string, input: unknown): Promise<ToolResult>
       return result.ok
         ? { ok: true, data: { logged: true } }
         : { ok: false, error: "Decision log not configured (POSTGRES_URL missing)" }
+    }
+
+    // ===== New tools (Cycles 1-3) =====
+    if (name === "query_diary_today") {
+      const args = queryDiaryDateSchema.parse(input)
+      const entries = await getDiaryEntriesForDate({ date: args.date })
+      return { ok: true, data: entries }
+    }
+    if (name === "query_diary_recent") {
+      const entries = await getRecentDiaryEntries(10)
+      return { ok: true, data: entries }
+    }
+    if (name === "query_diary_flagged") {
+      const entries = await getDiaryFlaggedEntries({ days: 14 })
+      return { ok: true, data: entries }
+    }
+    if (name === "query_voice_memos_pending") {
+      const memos = await getPendingVoiceMemos()
+      return { ok: true, data: memos }
+    }
+
+    if (name === "query_defects_summary") {
+      const summary = await getDefectsSummary()
+      return { ok: true, data: summary }
+    }
+    if (name === "query_defects_open") {
+      const defects = await getOpenHighSeverityDefects()
+      return { ok: true, data: defects }
+    }
+    if (name === "query_defects_list") {
+      const args = queryDefectsListSchema.parse(input)
+      const defects = await getDefectsList({ status: args.status, limit: args.limit })
+      return { ok: true, data: defects }
+    }
+
+    if (name === "query_high_priority_notes") {
+      const notes = await getHighPriorityNotes(projectScope() ?? undefined)
+      return { ok: true, data: notes }
+    }
+    if (name === "query_notes") {
+      const args = queryNotesSchema.parse(input)
+      const notes = await getGeneralNotes({
+        project: projectScope() ?? undefined,
+        category: args.category,
+        priority: args.priority,
+        status: args.status,
+        limit: args.limit,
+      })
+      return { ok: true, data: notes }
+    }
+
+    if (name === "query_uninvoiced_subcon") {
+      const entries = await getUninvoicedSubconEntries(50)
+      return { ok: true, data: { count: entries.length, entries } }
+    }
+
+    if (name === "query_claims_summary") {
+      const summary = await getMerSummary()
+      return { ok: true, data: summary }
+    }
+    if (name === "query_claims_for_month") {
+      const args = queryClaimsForMonthSchema.parse(input)
+      const ym = args.yearMonth ?? `${new Date().getUTCFullYear()}-${String(new Date().getUTCMonth() + 1).padStart(2, "0")}`
+      const claims = await getMerClaimsForMonth(ym)
+      return { ok: true, data: { yearMonth: ym, claims } }
+    }
+    if (name === "query_claims_scopes") {
+      const scopes = await getMerScopes()
+      return { ok: true, data: scopes }
+    }
+    if (name === "query_mer_sync_status") {
+      const status = await getMerSyncStatus()
+      return { ok: true, data: status }
+    }
+
+    if (name === "query_n8n_workflows") {
+      const workflows = await listWorkflows()
+      return { ok: true, data: workflows }
+    }
+    if (name === "query_n8n_failures") {
+      const failures = await getRecentFailures(10)
+      return { ok: true, data: failures }
+    }
+
+    if (name === "query_outlook_flagged") {
+      if (!outlookConfigured()) {
+        return { ok: true, data: { configured: false, messages: [] } }
+      }
+      const messages = await getCategorisedMessages({ limit: 10 })
+      return { ok: true, data: { configured: true, messages } }
+    }
+
+    if (name === "query_variations") {
+      const variations = await listVariations({ limit: 50 })
+      return { ok: true, data: variations }
+    }
+    if (name === "create_variation_draft") {
+      const args = createVariationSchema.parse(input)
+      // Resolve project ID
+      const project = projectScope() ?? "411"
+      const records = await listRecords(TABLES.PROJECTS, {
+        filterByFormula: `FIND("${project}", {Project Number})`,
+        maxRecords: 1,
+        fields: ["Project Number"],
+      })
+      const projectId = records[0]?.id
+      if (!projectId) return { ok: false, error: "Could not resolve project ID" }
+      const v = await createVariationDraft({
+        variationNumber: args.variationNumber,
+        title: args.title,
+        projectId,
+      })
+      await logDecision({
+        actor: "assistant",
+        category: "variation-draft",
+        subject: project,
+        body: { variationNumber: args.variationNumber, title: args.title, airtableId: v.id },
+        sourceId: v.id,
+      })
+      return { ok: true, data: v }
+    }
+
+    if (name === "query_ncr_summary") {
+      if (!process.env.GOOGLE_NCR_FOLDER_ID) {
+        return { ok: false, error: "GOOGLE_NCR_FOLDER_ID not set" }
+      }
+      const summary = await getNcrSummary()
+      return { ok: true, data: summary }
+    }
+
+    if (name === "add_note_to_notion") {
+      const args = addNoteSchema.parse(input)
+      const note = await addGeneralNote({
+        title: args.title,
+        body: args.body,
+        category: args.category,
+        priority: args.priority,
+        project: projectScope() ?? undefined,
+      })
+      await logDecision({
+        actor: "assistant",
+        category: "note-write",
+        subject: projectScope() ?? null,
+        body: { title: args.title, notionPageId: note.id },
+        sourceId: note.id,
+      } as Parameters<typeof logDecision>[0])
+      return { ok: true, data: note }
+    }
+    if (name === "mark_defect_status") {
+      const args = markDefectSchema.parse(input)
+      const result = await markDefectStatus({ pageId: args.pageId, status: args.status })
+      if (!result.ok) return { ok: false, error: result.error ?? "unknown error" }
+      await logDecision({
+        actor: "assistant",
+        category: "defect-status-write",
+        body: { pageId: args.pageId, status: args.status },
+        sourceId: args.pageId,
+      } as Parameters<typeof logDecision>[0])
+      return { ok: true, data: { updated: true, pageId: args.pageId, status: args.status } }
     }
 
     return { ok: false, error: `Unknown tool: ${name}` }
