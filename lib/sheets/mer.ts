@@ -178,6 +178,8 @@ function parseDataRows(
     if (!job && !scope) continue
     // Skip TOTALS row
     if (/^total/i.test(job) || /^total/i.test(scope)) continue
+    // Skip template/copy-me rows
+    if (/template|copy this|placeholder/i.test(scope) || /template|copy this/i.test(job)) continue
     // We need both a current project context and either Job or Scope to identify the row
     if (!currentProjectNumber) continue
     if (!scope) continue
