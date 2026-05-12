@@ -7,6 +7,7 @@ import { DiaryTodayCard } from "@/components/dashboard/DiaryTodayCard"
 import { DeliveriesCard } from "@/components/dashboard/DeliveriesCard"
 import { DefectsCard } from "@/components/dashboard/DefectsCard"
 import { NotesCard } from "@/components/dashboard/NotesCard"
+import { OutlookCard } from "@/components/dashboard/OutlookCard"
 import { ClaimsSummaryCard } from "@/components/budget/ClaimsSummaryCard"
 import { CardSkeleton } from "@/components/ui/Skeleton"
 import { DashboardTabs } from "@/components/dashboard/DashboardTabs"
@@ -47,6 +48,10 @@ export default async function DashboardPage() {
 
         <Suspense fallback={<CardSkeleton />}>
           <POApprovalsCard />
+        </Suspense>
+
+        <Suspense fallback={<CardSkeleton />}>
+          <OutlookCard />
         </Suspense>
       </div>
     </div>

@@ -22,6 +22,7 @@ export type OutlookCategorisedMessage = {
   categories: string[]
   webLink: string
   isRead: boolean
+  conversationId: string
 }
 
 const TARGET_CATEGORIES = ["Needs Reply", "To Be Discussed", "Urgent"] as const
@@ -82,7 +83,7 @@ export async function getCategorisedMessages(opts?: {
   const url = new URL(`https://graph.microsoft.com/v1.0/users/${upn}/messages`)
   url.searchParams.set("$top", String(limit * 3))
   url.searchParams.set("$orderby", "receivedDateTime desc")
-  url.searchParams.set("$select", "id,subject,from,receivedDateTime,bodyPreview,categories,webLink,isRead")
+  url.searchParams.set("$select", "id,subject,from,receivedDateTime,bodyPreview,categories,webLink,isRead,conversationId")
 
   const res = await fetch(url.toString(), {
     headers: { Authorization: `Bearer ${token}` },
@@ -108,7 +109,30 @@ export async function getCategorisedMessages(opts?: {
       categories: (m.categories as string[]) ?? [],
       webLink: String(m.webLink ?? ""),
       isRead: Boolean(m.isRead ?? false),
+      conversationId: String(m.conversationId ?? ""),
     }))
+}
+
+/**
+ * For a list of messages, check which conversationIds have a sent reply.
+ * Returns a Set of conversationIds that Nathan has already replied to.
+ */
+export async function getRepliedConversationIds(
+  userPrincipalName: string,
+  since: string,
+): Promise<Set<string>> {
+  const token = await getToken()
+  const url = new URL(`https://graph.microsoft.com/v1.0/users/${userPrincipalName}/mailFolders/SentItems/messages`)
+  url.searchParams.set("$top", "50")
+  url.searchParams.set("$filter", `sentDateTime ge ${since}`)
+  url.searchParams.set("$select", "conversationId,sentDateTime")
+  const res = await fetch(url.toString(), {
+    headers: { Authorization: `Bearer ${token}` },
+    cache: "no-store",
+  })
+  if (!res.ok) return new Set()
+  const data = (await res.json()) as { value: Array<{ conversationId: string }> }
+  return new Set(data.value.map((m) => m.conversationId))
 }
 
 export async function pingOutlook(): Promise<{ ok: boolean; configured: boolean; error?: string }> {

@@ -135,18 +135,16 @@ export function POCard({
             <span className="text-neutral-600">Invoice Date:</span> {date}
           </p>
         )}
-        {invoiceUrl && invoiceUrl.startsWith("http") && (
-          <p>
-            <a
-              href={invoiceUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="text-fg hover:text-fg"
-            >
-              View invoice PDF
-            </a>
-          </p>
-        )}
+        <p>
+          <a
+            href={`/api/monday/pos/${item.id}/pdf`}
+            target="_blank"
+            rel="noreferrer"
+            className="text-fg underline hover:text-amber-300"
+          >
+            View invoice PDF
+          </a>
+        </p>
       </div>
 
       {additionalComments && (

@@ -15,6 +15,7 @@ export type InboxSource =
   | "sheets-delivery"
   | "notion-diary"
   | "docket-app"
+  | "outlook"
 
 export type InboxUrgency = "now" | "today" | "this-week"
 

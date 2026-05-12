@@ -14,6 +14,7 @@ import { generateMondayPOItems } from "./generators/monday-po"
 import { generateDeliveryItems } from "./generators/sheets-delivery"
 import { generateDiaryItems } from "./generators/notion-diary"
 import { generateDocketItems } from "./generators/dockets"
+import { generateOutlookItems } from "./generators/outlook"
 
 export type { InboxItem, InboxItemAction, InboxItemState, InboxSource, InboxUrgency } from "./types"
 
@@ -46,6 +47,7 @@ export async function runInbox(): Promise<InboxItem[]> {
     safeRun(generateDeliveryItems),
     safeRun(generateDiaryItems),
     safeRun(generateDocketItems),
+    safeRun(generateOutlookItems),
   ])
 
   const all = batches.flat()
