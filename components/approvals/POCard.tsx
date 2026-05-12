@@ -52,7 +52,6 @@ export function POCard({
   const costCode = col(item, "single_select")
   const jobScope = col(item, "multi_select6")
   const additionalComments = col(item, "long_text_mkrv1x66")
-  const invoiceUrl = item.column_values.find((c) => c.id === "upload_file")?.text ?? ""
 
   // Pre-select existing values on the dropdowns when allocation panel opens.
   // If the PO has no current allocation but a supplier-learning suggestion

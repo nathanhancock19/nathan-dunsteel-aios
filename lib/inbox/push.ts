@@ -26,6 +26,7 @@ const SOURCE_BADGE: Record<InboxSource, string> = {
   "sheets-delivery": "DELIVERY",
   "notion-diary": "DIARY",
   "docket-app": "DOCKET",
+  outlook: "EMAIL",
 }
 
 function dunsteelLink(): string {
