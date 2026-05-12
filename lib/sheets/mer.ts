@@ -37,6 +37,7 @@ export type MerScope = {
   id: string
   projectNumber: string
   projectLabel: string
+  jobIndex: string | null
   scopeName: string
   scopeValue: number | null
   remainingValue: number | null
@@ -51,6 +52,7 @@ export type MerClaim = {
   yearMonth: string
   remainingValue: number | null
   claimedPct: number | null
+  thisMonthValue: number | null
 }
 
 export type MerData = {
@@ -191,6 +193,7 @@ function parseDataRows(
       id,
       projectNumber: currentProjectNumber,
       projectLabel: currentProjectLabel,
+      jobIndex: job || null,
       scopeName: scope,
       scopeValue: parseAmount(row[2]),
       remainingValue: parseAmount(row[3]),
@@ -200,8 +203,9 @@ function parseDataRows(
 
     for (const b of blocks) {
       const thisMonthPct = parsePercent(row[b.pctCol])
+      const thisMonthValue = parseAmount(row[b.dollarCol])
       const remaining = parseAmount(row[b.remainCol])
-      if (thisMonthPct == null && remaining == null) continue
+      if (thisMonthPct == null && remaining == null && thisMonthValue == null) continue
       claims.push({
         id: `${currentProjectNumber}::${scope}::${b.yearMonth}`,
         projectNumber: currentProjectNumber,
@@ -209,6 +213,7 @@ function parseDataRows(
         yearMonth: b.yearMonth,
         remainingValue: remaining,
         claimedPct: thisMonthPct,
+        thisMonthValue,
       })
     }
   }

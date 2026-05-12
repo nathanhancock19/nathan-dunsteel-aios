@@ -23,13 +23,13 @@ export async function DefectsCard() {
         </Card>
       )
     }
-    const open = (s.byStatus["Identified"] ?? 0) + (s.byStatus["In Progress"] ?? 0)
     const high = (s.bySeverity["High"] ?? 0) + (s.bySeverity["Critical"] ?? 0)
+    const rectified = s.byStatus["Rectified"] ?? 0
     return (
       <Card title="Defects" subtitle="411" icon={ShieldAlert}>
         <div className="grid grid-cols-3 gap-3 text-center">
           <Stat label="Total" value={s.total} />
-          <Stat label="Open" value={open} alert={open > 0} />
+          <Stat label="Rectified" value={rectified} />
           <Stat label="High sev" value={high} alert={high > 0} />
         </div>
         <div className="mt-3 flex items-center justify-between text-xs text-fg-muted">

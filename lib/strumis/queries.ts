@@ -12,6 +12,7 @@ const project = () => process.env.AIOS_PRIMARY_PROJECT_NUMBER ?? "411"
 
 export type MerScopeRow = {
   scopeName: string
+  jobIndex: string | null
   scopeValue: number | null
   remainingValue: number | null
   claimedPct: number | null
@@ -23,6 +24,7 @@ export type MerClaimRow = {
   yearMonth: string
   remainingValue: number | null
   claimedPct: number | null
+  thisMonthValue: number | null
 }
 
 export type MerSyncStatus = {
@@ -40,19 +42,21 @@ export async function getMerScopes(projectNumber?: string): Promise<MerScopeRow[
   const rows = await db<
     Array<{
       scope_name: string
+      job_index: string | null
       scope_value: string | null
       remaining_value: string | null
       claimed_pct: string | null
       is_variation: boolean
     }>
   >`
-    select scope_name, scope_value, remaining_value, claimed_pct, is_variation
+    select scope_name, job_index, scope_value, remaining_value, claimed_pct, is_variation
     from mer_scopes
     where project_number = ${p}
     order by is_variation, scope_name
   `
   return rows.map((r) => ({
     scopeName: r.scope_name,
+    jobIndex: r.job_index ?? null,
     scopeValue: r.scope_value == null ? null : Number(r.scope_value),
     remainingValue: r.remaining_value == null ? null : Number(r.remaining_value),
     claimedPct: r.claimed_pct == null ? null : Number(r.claimed_pct),
@@ -70,9 +74,10 @@ export async function getMerClaimsSchedule(projectNumber?: string): Promise<MerC
       year_month: string
       remaining_value: string | null
       claimed_pct: string | null
+      this_month_value: string | null
     }>
   >`
-    select scope_name, year_month, remaining_value, claimed_pct
+    select scope_name, year_month, remaining_value, claimed_pct, this_month_value
     from mer_claims
     where project_number = ${p}
     order by year_month, scope_name
@@ -82,6 +87,7 @@ export async function getMerClaimsSchedule(projectNumber?: string): Promise<MerC
     yearMonth: r.year_month,
     remainingValue: r.remaining_value == null ? null : Number(r.remaining_value),
     claimedPct: r.claimed_pct == null ? null : Number(r.claimed_pct),
+    thisMonthValue: r.this_month_value == null ? null : Number(r.this_month_value),
   }))
 }
 
@@ -98,9 +104,10 @@ export async function getMerClaimsForMonth(
       year_month: string
       remaining_value: string | null
       claimed_pct: string | null
+      this_month_value: string | null
     }>
   >`
-    select scope_name, year_month, remaining_value, claimed_pct
+    select scope_name, year_month, remaining_value, claimed_pct, this_month_value
     from mer_claims
     where project_number = ${p}
       and year_month = ${yearMonth}
@@ -111,6 +118,7 @@ export async function getMerClaimsForMonth(
     yearMonth: r.year_month,
     remainingValue: r.remaining_value == null ? null : Number(r.remaining_value),
     claimedPct: r.claimed_pct == null ? null : Number(r.claimed_pct),
+    thisMonthValue: r.this_month_value == null ? null : Number(r.this_month_value),
   }))
 }
 
@@ -170,14 +178,16 @@ export async function getMerSummary(projectNumber?: string): Promise<MerSummary>
     totalScopeValue > 0 ? Math.max(0, Math.min(1, 1 - totalRemainingValue / totalScopeValue)) : 0
   const variations = scopes.filter((s) => s.isVariation)
 
-  // Estimate claimed value this month: claimed_pct * scope_value summed across scopes that have a claim entry this month
+  // Sum this month's claimed value: prefer thisMonthValue direct from sheet, else fall back to claimedPct * scopeValue
   let thisMonthClaimedValue = 0
   const scopeByName = new Map(scopes.map((s) => [s.scopeName, s]))
   for (const c of monthClaims) {
-    if (c.claimedPct == null) continue
-    const sc = scopeByName.get(c.scopeName)
-    if (!sc?.scopeValue) continue
-    thisMonthClaimedValue += c.claimedPct * sc.scopeValue
+    if (c.thisMonthValue != null) {
+      thisMonthClaimedValue += c.thisMonthValue
+    } else if (c.claimedPct != null) {
+      const sc = scopeByName.get(c.scopeName)
+      if (sc?.scopeValue) thisMonthClaimedValue += c.claimedPct * sc.scopeValue
+    }
   }
 
   return {

@@ -8,6 +8,7 @@ import {
   getRichText,
   getDate,
   getSelect,
+  getMultiSelect,
   getNumber,
   getCheckbox,
   getCreatedTime,
@@ -22,6 +23,7 @@ export type DiaryEntry = {
   finishTime: string | null
   hoursLost: number | null
   crewOnsite: number | null
+  crewNames: string[]
   notes: string
   safetyIncident: boolean
   builderDelays: boolean
@@ -62,6 +64,7 @@ function mapEntry(
     finishTime: getRichText(props, "Finish Time") || getRichText(props, "Finish time") || null,
     hoursLost: getNumber(props, "Hours Lost") ?? getNumber(props, "Hours lost"),
     crewOnsite: getNumber(props, "Crew Onsite") ?? getNumber(props, "Crew onsite"),
+    crewNames: source === "subcon" ? getMultiSelect(props, "Crew") : [],
     notes: getRichText(props, "Notes"),
     safetyIncident: getCheckbox(props, "Safety Incidents") || getCheckbox(props, "Safety Incident"),
     builderDelays: getCheckbox(props, "Builder Delays") || getCheckbox(props, "Builder Delay"),
@@ -133,6 +136,31 @@ export async function getDiaryFlaggedEntries(opts?: { days?: number }): Promise<
     }
   }
   return results
+}
+
+export async function getDiaryEntriesThisWeek(): Promise<DiaryEntry[]> {
+  const today = new Date()
+  const dayOfWeek = today.getDay() // 0=Sun, 1=Mon...
+  const monday = new Date(today)
+  monday.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1))
+  const mondayIso = monday.toLocaleDateString("en-CA", { timeZone: "Australia/Sydney" })
+  const todayIsoStr = today.toLocaleDateString("en-CA", { timeZone: "Australia/Sydney" })
+  const filter = {
+    and: [
+      { property: "Date", date: { on_or_after: mondayIso } },
+      { property: "Date", date: { on_or_before: todayIsoStr } },
+    ],
+  }
+  const sorts = [{ property: "Date", direction: "descending" } as const]
+  const [perf, sub] = await Promise.allSettled([
+    queryDataSource({ databaseId: performanceDb(), filter, sorts, pageSize: 30 }),
+    queryDataSource({ databaseId: subconDb(), filter, sorts, pageSize: 30 }),
+  ])
+  const out: DiaryEntry[] = []
+  if (perf.status === "fulfilled") for (const p of perf.value) out.push(mapEntry(p, "performance"))
+  if (sub.status === "fulfilled") for (const p of sub.value) out.push(mapEntry(p, "subcon"))
+  out.sort((a, b) => (b.date ?? "").localeCompare(a.date ?? ""))
+  return out
 }
 
 export async function getUninvoicedSubconEntries(limit = 50): Promise<DiaryEntry[]> {

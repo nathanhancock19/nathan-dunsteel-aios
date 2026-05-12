@@ -23,9 +23,18 @@ const URGENCY_ORDER: Record<InboxUrgency, number> = {
   "this-week": 2,
 }
 
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error(`timeout after ${ms}ms`)), ms),
+    ),
+  ])
+}
+
 async function safeRun(fn: () => Promise<InboxItem[]>): Promise<InboxItem[]> {
   try {
-    return await fn()
+    return await withTimeout(fn(), 8000)
   } catch {
     return []
   }

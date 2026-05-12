@@ -26,11 +26,12 @@ async function runSync() {
   // Upsert scopes
   for (const s of data.scopes) {
     await db`
-      insert into mer_scopes (id, project_number, project_label, scope_name, scope_value, remaining_value, claimed_pct, is_variation, synced_at)
-      values (${s.id}, ${s.projectNumber}, ${s.projectLabel}, ${s.scopeName},
+      insert into mer_scopes (id, project_number, project_label, job_index, scope_name, scope_value, remaining_value, claimed_pct, is_variation, synced_at)
+      values (${s.id}, ${s.projectNumber}, ${s.projectLabel}, ${s.jobIndex ?? null}, ${s.scopeName},
               ${s.scopeValue}, ${s.remainingValue}, ${s.claimedPct}, ${s.isVariation}, now())
       on conflict (id) do update set
         project_label = excluded.project_label,
+        job_index = excluded.job_index,
         scope_value = excluded.scope_value,
         remaining_value = excluded.remaining_value,
         claimed_pct = excluded.claimed_pct,
@@ -42,12 +43,13 @@ async function runSync() {
   // Upsert claims
   for (const c of data.claims) {
     await db`
-      insert into mer_claims (id, project_number, scope_name, year_month, remaining_value, claimed_pct, synced_at)
+      insert into mer_claims (id, project_number, scope_name, year_month, remaining_value, claimed_pct, this_month_value, synced_at)
       values (${c.id}, ${c.projectNumber}, ${c.scopeName}, ${c.yearMonth},
-              ${c.remainingValue}, ${c.claimedPct}, now())
+              ${c.remainingValue}, ${c.claimedPct}, ${c.thisMonthValue ?? null}, now())
       on conflict (id) do update set
         remaining_value = excluded.remaining_value,
         claimed_pct = excluded.claimed_pct,
+        this_month_value = excluded.this_month_value,
         synced_at = excluded.synced_at
     `
   }

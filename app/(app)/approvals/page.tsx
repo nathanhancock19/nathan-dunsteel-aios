@@ -1,8 +1,6 @@
 import { listBoardItems, getColumnOptions, type MondayBoardItem, type ColumnOption } from "@/lib/monday"
-import { listPendingQuotes, type QuoteApproval } from "@/lib/airtable/quotes"
 import { suggestPOAllocation } from "@/lib/decisions/log"
 import { POList, type AllocationSuggestion } from "@/components/approvals/POList"
-import { QuoteList } from "@/components/approvals/QuoteList"
 
 export const dynamic = "force-dynamic"
 
@@ -16,15 +14,6 @@ async function getPOs() {
   return listBoardItems(boardId, 50)
 }
 
-/**
- * Filter PO list to items where Nathan is in the people (Assignee) column.
- *
- * The Monday `people` column stores the assignee in `value` as JSON, e.g.
- *   {"changed_at":"...","personsAndTeams":[{"id":73750162,"kind":"person"}]}
- * We parse `value` (not `text`) to match by id.
- *
- * If AIOS_USER_MONDAY_ID is unset, no filter is applied (returns all items).
- */
 function filterToAssignee(items: MondayBoardItem[], userId: number | null): MondayBoardItem[] {
   if (userId === null) return items
   return items.filter((item) => {
@@ -42,15 +31,13 @@ function filterToAssignee(items: MondayBoardItem[], userId: number | null): Mond
 }
 
 export default async function ApprovalsPage() {
-  let pos
+  let pos: MondayBoardItem[] | null = null
   let posError: string | null = null
   let jobScopeOptions: ColumnOption[] = []
   let costCodeOptions: ColumnOption[] = []
-  let quotes: QuoteApproval[] = []
-  let quotesError: string | null = null
 
   if (!process.env.MONDAY_API_KEY || !process.env.MONDAY_PO_BOARD_ID) {
-    posError = "MONDAY_API_KEY or MONDAY_PO_BOARD_ID not set"
+    posError = "Monday.com not connected. Set MONDAY_API_KEY and MONDAY_PO_BOARD_ID in Vercel."
   } else {
     try {
       const all = await getPOs()
@@ -69,13 +56,10 @@ export default async function ApprovalsPage() {
       jobScopeOptions = opts[JOB_SCOPE_COLUMN_ID] ?? []
       costCodeOptions = opts[COST_CODE_COLUMN_ID] ?? []
     } catch {
-      // Options are non-critical: missing options just disables the
-      // allocation pickers; status flip still works.
+      // Non-critical: missing options disables allocation pickers only
     }
   }
 
-  // Per-supplier allocation suggestions from the decision log. No-op if
-  // POSTGRES_URL isn't set; just returns null per item.
   let suggestions: Record<string, AllocationSuggestion> = {}
   if (pos && pos.length > 0) {
     const pairs = await Promise.all(
@@ -89,61 +73,33 @@ export default async function ApprovalsPage() {
     )
   }
 
-  try {
-    quotes = await listPendingQuotes()
-  } catch (err) {
-    quotesError = err instanceof Error ? err.message : String(err)
-    quotes = []
-  }
-
-  const pendingPOCount = pos?.filter((i) => {
+  const pendingCount = pos?.filter((i) => {
     const status = i.column_values.find((c) => c.id === "status")?.text ?? ""
     return status.toLowerCase().includes("pending")
   }).length ?? 0
 
-  const totalPending = pendingPOCount + (quotes?.length ?? 0)
-
   return (
-    <div className="max-w-2xl">
-      <div className="mb-6">
-        <h1 className="text-lg font-semibold text-neutral-100">Approvals</h1>
-        {totalPending > 0 && (
-          <p className="text-sm text-fg">
-            {totalPending} item{totalPending !== 1 ? "s" : ""} waiting on you
-          </p>
-        )}
+    <section className="space-y-5">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight text-cream">Approvals</h1>
+        <p className="mt-1 text-sm text-muted">
+          PO approvals from Monday.com
+          {pendingCount > 0 ? ` - ${pendingCount} pending` : ""}
+        </p>
       </div>
 
-      <section className="mb-8">
-        <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-neutral-500">
-          PO Approvals
-        </h2>
-        {posError ? (
-          <div className="rounded-md border border-red-900 bg-red-950 px-4 py-3 text-sm text-red-300">
-            {posError}
-          </div>
-        ) : pos ? (
-          <POList
-            items={pos}
-            jobScopeOptions={jobScopeOptions}
-            costCodeOptions={costCodeOptions}
-            suggestions={suggestions}
-          />
-        ) : null}
-      </section>
-
-      <section>
-        <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-neutral-500">
-          Quote Approvals
-        </h2>
-        {quotesError ? (
-          <div className="rounded-md border border-red-900 bg-red-950 px-4 py-3 text-sm text-red-300">
-            {quotesError}
-          </div>
-        ) : (
-          <QuoteList quotes={quotes ?? []} />
-        )}
-      </section>
-    </div>
+      {posError ? (
+        <div className="rounded-xl border border-rule bg-ink/40 p-4 text-sm text-muted">
+          {posError}
+        </div>
+      ) : pos ? (
+        <POList
+          items={pos}
+          jobScopeOptions={jobScopeOptions}
+          costCodeOptions={costCodeOptions}
+          suggestions={suggestions}
+        />
+      ) : null}
+    </section>
   )
 }

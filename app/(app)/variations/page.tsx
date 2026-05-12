@@ -40,13 +40,8 @@ export default async function VariationsPage() {
       </div>
 
       {error ? (
-        <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm">
-          <p className="font-semibold text-red-300">Variations table not available</p>
-          <p className="mt-1 text-xs text-muted">{error}</p>
-          <p className="mt-2 text-xs text-muted">
-            Create the Variations and VariationLineItems tables in Airtable base{" "}
-            <code className="rounded bg-rule px-1">{process.env.AIRTABLE_BASE_ID}</code>. See spec Section 5.
-          </p>
+        <div className="rounded-xl border border-rule bg-ink/40 p-4 text-sm text-muted">
+          Variations tracking not yet configured. The Airtable Variations table needs to be created first.
         </div>
       ) : variations.length === 0 ? (
         <p className="text-sm text-muted">No variations yet. Click &quot;New variation&quot; to start one.</p>

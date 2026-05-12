@@ -7,7 +7,8 @@ export default auth((req) => {
   if (
     pathname === "/login" ||
     pathname.startsWith("/api/auth/") ||
-    pathname === "/api/health"
+    pathname === "/api/health" ||
+    (pathname.startsWith("/api/sync/") && req.headers.get("x-vercel-cron") != null)
   ) {
     return NextResponse.next()
   }
