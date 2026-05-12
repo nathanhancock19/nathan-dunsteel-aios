@@ -1,8 +1,27 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import type { NcrRecord } from "@/lib/drive/ncr-analytics"
-import { CATEGORY_ORDER } from "@/lib/drive/ncr-analytics"
+
+const CATEGORY_ORDER = [
+  "Cleat on Wrong Side",
+  "Cleat in Wrong Location",
+  "Cleat Upside Down / 180°",
+  "Cleat Missing / Not Welded",
+  "Holes Not Drilled / Incorrect",
+  "Drawing / Design Error",
+  "Other / Unknown",
+] as const
+
+type NcrRecord = {
+  id: string
+  date: string
+  level: string
+  assembly: string
+  description: string
+  category: string
+  thumbnailLink?: string
+  webViewLink?: string
+}
 
 type Analytics = {
   records: NcrRecord[]
