@@ -56,8 +56,14 @@ export default function DefectsPage() {
 
   useEffect(() => {
     fetch("/api/ncr/analytics")
-      .then((r) => r.json())
-      .then((d: unknown) => setData(d as Analytics))
+      .then(async (r) => {
+        const body = (await r.json()) as Partial<Analytics> & { error?: string }
+        if (!r.ok || body.error) {
+          throw new Error(body.error || `HTTP ${r.status}`)
+        }
+        return body as Analytics
+      })
+      .then((d) => setData(d))
       .catch((e: Error) => setError(e.message))
   }, [])
 

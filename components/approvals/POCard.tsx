@@ -42,7 +42,6 @@ export function POCard({
 }: Props) {
   const [loading, setLoading] = useState<"approve" | "query" | null>(null)
   const [showQuery, setShowQuery] = useState(false)
-  const [showAllocate, setShowAllocate] = useState(false)
   const [queryMsg, setQueryMsg] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState(false)
@@ -119,16 +118,6 @@ export function POCard({
       </div>
 
       <div className="mb-3 space-y-0.5 text-xs text-neutral-500">
-        {jobScope && (
-          <p>
-            <span className="text-neutral-600">Job/Scope:</span> {jobScope}
-          </p>
-        )}
-        {costCode && (
-          <p>
-            <span className="text-neutral-600">Cost Code:</span> {costCode}
-          </p>
-        )}
         {date && (
           <p>
             <span className="text-neutral-600">Invoice Date:</span> {date}
@@ -155,48 +144,20 @@ export function POCard({
         </div>
       )}
 
-      {suggestionLabel && !showAllocate && (
-        <p className="mb-3 text-xs text-fg/80">
-          Suggested: {suggestionLabel}
-        </p>
-      )}
-
-      {error && <p className="mb-2 text-xs text-red-400">{error}</p>}
-
-      {!showAllocate && !showQuery && (
-        <div className="flex flex-wrap gap-2">
-          <button
-            disabled={loading !== null}
-            onClick={() => setShowAllocate(true)}
-            className="rounded-md bg-green-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-600 disabled:opacity-50"
-          >
-            Approve
-          </button>
-
-          <button
-            disabled={loading !== null}
-            onClick={() => setShowQuery(true)}
-            className="rounded-md border border-neutral-700 px-3 py-1.5 text-xs font-medium text-neutral-300 hover:border-neutral-500 disabled:opacity-50"
-          >
-            Query
-          </button>
-        </div>
-      )}
-
-      {showAllocate && (
-        <div className="mt-1 space-y-3 rounded-md border border-neutral-800 bg-neutral-950 p-3">
-          <p className="text-[10px] font-medium uppercase tracking-wider text-neutral-500">
-            Allocate before approving (optional)
-          </p>
-
+      {/* Inline allocation - always visible so Nathan can change Job/Scope + Cost Code
+          directly before clicking Approve, no extra panel toggle. */}
+      <div className="mb-3 space-y-2 rounded-md border border-neutral-800 bg-neutral-950/60 p-3">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           <div className="space-y-1">
-            <label className="block text-xs text-neutral-400">Job / Scope</label>
+            <label className="block text-[10px] font-medium uppercase tracking-wider text-neutral-500">
+              Job / Scope
+            </label>
             <select
               value={jobScopeId}
               onChange={(e) => setJobScopeId(e.target.value)}
               className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-2 py-1.5 text-xs text-neutral-100 focus:outline-none focus:ring-1 focus:ring-fg-muted"
             >
-              <option value="">— Leave unchanged —</option>
+              <option value="">{jobScope || "— Unallocated —"}</option>
               {jobScopeOptions.map((opt) => (
                 <option key={opt.id} value={opt.id}>
                   {opt.label}
@@ -206,13 +167,15 @@ export function POCard({
           </div>
 
           <div className="space-y-1">
-            <label className="block text-xs text-neutral-400">Cost Code</label>
+            <label className="block text-[10px] font-medium uppercase tracking-wider text-neutral-500">
+              Cost Code
+            </label>
             <select
               value={costCodeLabel}
               onChange={(e) => setCostCodeLabel(e.target.value)}
               className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-2 py-1.5 text-xs text-neutral-100 focus:outline-none focus:ring-1 focus:ring-fg-muted"
             >
-              <option value="">— Leave unchanged —</option>
+              <option value="">{costCode || "— Unallocated —"}</option>
               {costCodeOptions.map((opt) => (
                 <option key={opt.id} value={opt.label}>
                   {opt.label}
@@ -220,31 +183,37 @@ export function POCard({
               ))}
             </select>
           </div>
+        </div>
+        {suggestionLabel && (
+          <p className="text-[11px] text-amber-300/80">
+            Suggested: {suggestionLabel}
+          </p>
+        )}
+      </div>
 
-          <div className="flex flex-wrap gap-2 pt-1">
-            <button
-              disabled={loading !== null}
-              onClick={() =>
-                act("approve", () =>
-                  onApprove(item.id, item.name, buildAllocPayload()),
-                )
-              }
-              className="rounded-md bg-green-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-600 disabled:opacity-50"
-            >
-              {loading === "approve" ? "Approving..." : "Confirm approval"}
-            </button>
-            <button
-              disabled={loading !== null}
-              onClick={() => {
-                setShowAllocate(false)
-                setJobScopeId(initialJobScopeId)
-                setCostCodeLabel(initialCostCode)
-              }}
-              className="text-xs text-neutral-500 hover:text-neutral-300"
-            >
-              Cancel
-            </button>
-          </div>
+      {error && <p className="mb-2 text-xs text-red-400">{error}</p>}
+
+      {!showQuery && (
+        <div className="flex flex-wrap gap-2">
+          <button
+            disabled={loading !== null}
+            onClick={() =>
+              act("approve", () =>
+                onApprove(item.id, item.name, buildAllocPayload()),
+              )
+            }
+            className="rounded-md bg-green-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-green-600 disabled:opacity-50"
+          >
+            {loading === "approve" ? "Approving..." : "Approve"}
+          </button>
+
+          <button
+            disabled={loading !== null}
+            onClick={() => setShowQuery(true)}
+            className="rounded-md border border-neutral-700 px-3 py-1.5 text-xs font-medium text-neutral-300 hover:border-neutral-500 disabled:opacity-50"
+          >
+            Query
+          </button>
         </div>
       )}
 
@@ -267,7 +236,7 @@ export function POCard({
                   setQueryMsg("")
                 })
               }
-              className="rounded-md bg-fg px-3 py-1.5 text-xs font-medium text-white hover:bg-fg disabled:opacity-50"
+              className="rounded-md bg-blue-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-600 disabled:opacity-50"
             >
               {loading === "query" ? "Sending..." : "Send Query"}
             </button>

@@ -27,23 +27,7 @@ export default async function DashboardPage() {
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Suspense fallback={<CardSkeleton />}>
-          <DiaryTodayCard />
-        </Suspense>
-
-        <Suspense fallback={<CardSkeleton />}>
-          <DefectsCard />
-        </Suspense>
-
-        <Suspense fallback={<CardSkeleton />}>
-          <NotesCard />
-        </Suspense>
-
-        <Suspense fallback={<CardSkeleton />}>
-          <SiteActivityCard />
-        </Suspense>
-
-        <Suspense fallback={<CardSkeleton />}>
-          <DeliveriesCard />
+          <OutlookCard />
         </Suspense>
 
         <Suspense fallback={<CardSkeleton />}>
@@ -51,7 +35,23 @@ export default async function DashboardPage() {
         </Suspense>
 
         <Suspense fallback={<CardSkeleton />}>
-          <OutlookCard />
+          <DeliveriesCard />
+        </Suspense>
+
+        <Suspense fallback={<CardSkeleton />}>
+          <NotesCard />
+        </Suspense>
+
+        <Suspense fallback={<CardSkeleton />}>
+          <DefectsCard />
+        </Suspense>
+
+        <Suspense fallback={<CardSkeleton />}>
+          <DiaryTodayCard />
+        </Suspense>
+
+        <Suspense fallback={<CardSkeleton />}>
+          <SiteActivityCard />
         </Suspense>
       </div>
     </div>

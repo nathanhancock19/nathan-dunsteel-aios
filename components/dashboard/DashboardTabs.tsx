@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, type ReactNode } from "react"
+import { useEffect, useState, type ReactNode } from "react"
+import { useSearchParams } from "next/navigation"
 
 type TabKey = "inbox" | "snapshot"
 
@@ -9,8 +10,19 @@ type Props = {
   snapshot: ReactNode
 }
 
+function parseTab(value: string | null): TabKey {
+  return value === "snapshot" ? "snapshot" : "inbox"
+}
+
 export function DashboardTabs({ inbox, snapshot }: Props) {
-  const [active, setActive] = useState<TabKey>("inbox")
+  const searchParams = useSearchParams()
+  const [active, setActive] = useState<TabKey>(() => parseTab(searchParams.get("tab")))
+
+  // Re-sync when the sidebar link changes ?tab= while we're already on /dashboard.
+  useEffect(() => {
+    setActive(parseTab(searchParams.get("tab")))
+  }, [searchParams])
+
   return (
     <div>
       <div className="mb-4 flex gap-1 border-b border-rule">

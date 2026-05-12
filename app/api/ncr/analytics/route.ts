@@ -16,6 +16,12 @@ export async function GET() {
     const data = await getNcrAnalytics()
     return NextResponse.json(data)
   } catch (err) {
-    return NextResponse.json({ error: err instanceof Error ? err.message : String(err) }, { status: 500 })
+    const raw = err instanceof Error ? err.message : String(err)
+    // Drive returns "File not found" both when the folder ID is wrong AND when
+    // the service account has no access. Add a hint either way.
+    const hint = /file not found/i.test(raw)
+      ? `Drive folder ${process.env.GOOGLE_NCR_FOLDER_ID} not reachable. Share it with the AIOS service account (Viewer) or check the folder ID.`
+      : null
+    return NextResponse.json({ error: hint ?? raw, raw }, { status: 500 })
   }
 }
