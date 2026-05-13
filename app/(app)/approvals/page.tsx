@@ -1,10 +1,15 @@
-import { listBoardItems, getColumnOptions, type MondayBoardItem, type ColumnOption } from "@/lib/monday"
+import {
+  listBoardItems,
+  getColumnOptions,
+  filterItemsByAssignee,
+  type MondayBoardItem,
+  type ColumnOption,
+} from "@/lib/monday"
 import { suggestPOAllocation } from "@/lib/decisions/log"
 import { POList, type AllocationSuggestion } from "@/components/approvals/POList"
 
 export const dynamic = "force-dynamic"
 
-const ASSIGNEE_COLUMN_ID = "people"
 const JOB_SCOPE_COLUMN_ID = "multi_select6"
 const COST_CODE_COLUMN_ID = "single_select"
 
@@ -12,22 +17,6 @@ async function getPOs() {
   const boardId = process.env.MONDAY_PO_BOARD_ID
   if (!boardId) return null
   return listBoardItems(boardId, 50)
-}
-
-function filterToAssignee(items: MondayBoardItem[], userId: number | null): MondayBoardItem[] {
-  if (userId === null) return items
-  return items.filter((item) => {
-    const raw = item.column_values.find((c) => c.id === ASSIGNEE_COLUMN_ID)?.value
-    if (!raw) return false
-    try {
-      const parsed = JSON.parse(raw) as {
-        personsAndTeams?: Array<{ id: number; kind: string }>
-      }
-      return parsed.personsAndTeams?.some((p) => p.id === userId) ?? false
-    } catch {
-      return false
-    }
-  })
 }
 
 export default async function ApprovalsPage() {
@@ -43,7 +32,7 @@ export default async function ApprovalsPage() {
       const all = await getPOs()
       const userIdRaw = process.env.AIOS_USER_MONDAY_ID
       const userId = userIdRaw ? Number(userIdRaw) : null
-      pos = all === null ? null : filterToAssignee(all, userId)
+      pos = all === null ? null : filterItemsByAssignee(all, userId)
     } catch (err) {
       posError = err instanceof Error ? err.message : String(err)
     }

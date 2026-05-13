@@ -128,6 +128,33 @@ export async function changeColumnValue(args: {
 }
 
 /**
+ * Filter board items to those assigned to the given Monday user id via the
+ * `people` column. Same logic the /approvals page uses; lives here so the
+ * dashboard card and the full page can share a single source of truth.
+ *
+ * Pass `userId = null` to disable the filter (returns input unchanged).
+ */
+export function filterItemsByAssignee(
+  items: MondayBoardItem[],
+  userId: number | null,
+  columnId = "people",
+): MondayBoardItem[] {
+  if (userId === null) return items
+  return items.filter((item) => {
+    const raw = item.column_values.find((c) => c.id === columnId)?.value
+    if (!raw) return false
+    try {
+      const parsed = JSON.parse(raw) as {
+        personsAndTeams?: Array<{ id: number; kind: string }>
+      }
+      return parsed.personsAndTeams?.some((p) => p.id === userId) ?? false
+    } catch {
+      return false
+    }
+  })
+}
+
+/**
  * One option from a Monday dropdown or status column. `id` is the numeric
  * label id (used for dropdown writes), `label` is the human-readable string
  * (used for status writes).

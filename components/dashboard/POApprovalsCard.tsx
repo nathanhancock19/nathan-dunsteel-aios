@@ -1,7 +1,16 @@
 import Link from "next/link"
-import { listBoardItems } from "@/lib/monday"
+import { listBoardItems, filterItemsByAssignee } from "@/lib/monday"
 import { Card, ConfigState, EmptyState, ErrorState } from "./Card"
 
+/**
+ * POs awaiting Nathan's approval, mirroring the /approvals page filter:
+ *   1. fetch all items on MONDAY_PO_BOARD_ID
+ *   2. filter to items where `people` column contains AIOS_USER_MONDAY_ID
+ *   3. count those with a "pending" status
+ *
+ * Without the assignee filter the count diverges from /approvals (which is
+ * what confused Nathan: dashboard said 10 pending, page showed 4).
+ */
 export async function POApprovalsCard() {
   if (!process.env.MONDAY_API_KEY) {
     return (
@@ -19,8 +28,11 @@ export async function POApprovalsCard() {
   }
 
   try {
-    const items = await listBoardItems(process.env.MONDAY_PO_BOARD_ID, 10)
-    const pending = items.filter((i) => {
+    const all = await listBoardItems(process.env.MONDAY_PO_BOARD_ID, 50)
+    const userIdRaw = process.env.AIOS_USER_MONDAY_ID
+    const userId = userIdRaw ? Number(userIdRaw) : null
+    const mine = filterItemsByAssignee(all, userId)
+    const pending = mine.filter((i) => {
       const status = i.column_values.find((c) => c.id === "status")
       return status?.text?.toLowerCase().includes("pending")
     })

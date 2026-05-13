@@ -11,7 +11,10 @@ type Props = {
 }
 
 function parseTab(value: string | null): TabKey {
-  return value === "snapshot" ? "snapshot" : "inbox"
+  // Default to "snapshot" — inbox is slower to load (Monday/Outlook/Notion
+  // fan-out + Claude triage), and Nathan opens the dashboard wanting the
+  // overview first. Sidebar link explicitly passes ?tab=inbox.
+  return value === "inbox" ? "inbox" : "snapshot"
 }
 
 export function DashboardTabs({ inbox, snapshot }: Props) {
@@ -27,14 +30,14 @@ export function DashboardTabs({ inbox, snapshot }: Props) {
     <div>
       <div className="mb-4 flex gap-1 border-b border-rule">
         <TabButton
-          label="Inbox"
-          active={active === "inbox"}
-          onClick={() => setActive("inbox")}
-        />
-        <TabButton
           label="Snapshot"
           active={active === "snapshot"}
           onClick={() => setActive("snapshot")}
+        />
+        <TabButton
+          label="Inbox"
+          active={active === "inbox"}
+          onClick={() => setActive("inbox")}
         />
       </div>
       <div>{active === "inbox" ? inbox : snapshot}</div>

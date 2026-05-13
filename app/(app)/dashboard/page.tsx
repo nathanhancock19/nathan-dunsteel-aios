@@ -1,7 +1,6 @@
 import { auth } from "@/lib/auth"
 import { Suspense } from "react"
 import { TodayBar } from "@/components/dashboard/TodayBar"
-import { SiteActivityCard } from "@/components/dashboard/SiteActivityCard"
 import { POApprovalsCard } from "@/components/dashboard/POApprovalsCard"
 import { DiaryTodayCard } from "@/components/dashboard/DiaryTodayCard"
 import { DeliveriesCard } from "@/components/dashboard/DeliveriesCard"
@@ -48,10 +47,6 @@ export default async function DashboardPage() {
 
         <Suspense fallback={<CardSkeleton />}>
           <DiaryTodayCard />
-        </Suspense>
-
-        <Suspense fallback={<CardSkeleton />}>
-          <SiteActivityCard />
         </Suspense>
       </div>
     </div>
