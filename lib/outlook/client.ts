@@ -161,6 +161,53 @@ export async function getRepliedConversationIds(
   return ids
 }
 
+/**
+ * Remove a single category from a message via Graph PATCH. Requires the
+ * application registration to have Mail.ReadWrite consent.
+ *
+ * Returns true on a successful 200 / 204, false otherwise. Never throws -
+ * the caller treats a failure as "couldn't clear, leave it for next pass".
+ */
+export async function clearMessageCategory(
+  userPrincipalName: string,
+  messageId: string,
+  currentCategories: string[],
+  categoryToRemove: string,
+): Promise<boolean> {
+  if (!isConfigured()) return false
+  const next = currentCategories.filter((c) => c !== categoryToRemove)
+  if (next.length === currentCategories.length) return false
+  try {
+    const token = await getToken()
+    const res = await fetch(
+      `https://graph.microsoft.com/v1.0/users/${userPrincipalName}/messages/${messageId}`,
+      {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ categories: next }),
+        cache: "no-store",
+      },
+    )
+    if (!res.ok) {
+      // Log the body once for debug; don't spam since this runs every inbox.
+      const text = await res.text()
+      console.warn(
+        `[outlook] clear category PATCH failed ${res.status} for msg ${messageId}: ${text.slice(0, 200)}`,
+      )
+      return false
+    }
+    return true
+  } catch (err) {
+    console.warn(
+      `[outlook] clear category exception for msg ${messageId}: ${err instanceof Error ? err.message : String(err)}`,
+    )
+    return false
+  }
+}
+
 export async function pingOutlook(): Promise<{ ok: boolean; configured: boolean; error?: string }> {
   if (!isConfigured()) return { ok: false, configured: false }
   try {

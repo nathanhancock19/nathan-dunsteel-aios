@@ -8,7 +8,11 @@
  * Urgency: emails > 2 days old with no reply = "now", otherwise "today".
  */
 
-import { getCategorisedMessages, getRepliedConversationIds } from "@/lib/outlook/client"
+import {
+  getCategorisedMessages,
+  getRepliedConversationIds,
+  clearMessageCategory,
+} from "@/lib/outlook/client"
 import type { InboxItem } from "../types"
 
 function ageInHours(receivedDateTime: string): number {
@@ -52,8 +56,23 @@ export async function generateOutlookItems(): Promise<InboxItem[]> {
     // If sent-items check fails, surface all flagged emails rather than none
   }
 
-  // Drop messages already replied to
+  // Drop messages already replied to.
+  const repliedMessages = messages.filter((m) => repliedIds.has(m.conversationId ?? ""))
   const unreplied = messages.filter((m) => !repliedIds.has(m.conversationId ?? ""))
+
+  // Side-effect: clear the "Needs Reply" category from any message we
+  // detected as already replied to. Best-effort - failures are logged in
+  // the client and do not block the inbox.
+  //
+  // Fire-and-forget so the inbox doesn't wait on Graph PATCHes; the
+  // categories will be cleared by the time the next inbox call hits.
+  if (repliedMessages.length > 0) {
+    void Promise.all(
+      repliedMessages.map((m) =>
+        clearMessageCategory(upn, m.id, m.categories, "Needs Reply"),
+      ),
+    )
+  }
 
   return unreplied.map((m) => {
     const hours = ageInHours(m.receivedDateTime)
