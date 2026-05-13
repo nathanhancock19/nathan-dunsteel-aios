@@ -20,25 +20,13 @@ export default async function DashboardPage() {
 
   const snapshot = (
     <div className="space-y-4">
-      <Suspense fallback={<CardSkeleton rows={2} />}>
-        <ClaimsSummaryCard variant="compact" />
-      </Suspense>
-
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Suspense fallback={<CardSkeleton />}>
-          <OutlookCard />
-        </Suspense>
-
-        <Suspense fallback={<CardSkeleton />}>
-          <POApprovalsCard />
-        </Suspense>
-
-        <Suspense fallback={<CardSkeleton />}>
-          <DeliveriesCard />
-        </Suspense>
-
-        <Suspense fallback={<CardSkeleton />}>
           <NotesCard />
+        </Suspense>
+
+        <Suspense fallback={<CardSkeleton />}>
+          <DiaryTodayCard />
         </Suspense>
 
         <Suspense fallback={<CardSkeleton />}>
@@ -46,9 +34,21 @@ export default async function DashboardPage() {
         </Suspense>
 
         <Suspense fallback={<CardSkeleton />}>
-          <DiaryTodayCard />
+          <OutlookCard />
+        </Suspense>
+
+        <Suspense fallback={<CardSkeleton />}>
+          <DeliveriesCard />
+        </Suspense>
+
+        <Suspense fallback={<CardSkeleton />}>
+          <POApprovalsCard />
         </Suspense>
       </div>
+
+      <Suspense fallback={<CardSkeleton rows={2} />}>
+        <ClaimsSummaryCard variant="compact" />
+      </Suspense>
     </div>
   )
 

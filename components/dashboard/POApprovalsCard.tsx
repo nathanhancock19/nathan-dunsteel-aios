@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { listBoardItems, filterItemsByAssignee } from "@/lib/monday"
-import { Card, ConfigState, EmptyState, ErrorState } from "./Card"
+import { Card, ErrorState } from "./Card"
 
 /**
  * POs awaiting Nathan's approval, mirroring the /approvals page filter:
@@ -10,21 +10,12 @@ import { Card, ConfigState, EmptyState, ErrorState } from "./Card"
  *
  * Without the assignee filter the count diverges from /approvals (which is
  * what confused Nathan: dashboard said 10 pending, page showed 4).
+ *
+ * Returns null (no card) when nothing is pending — no wasted grid slot.
  */
 export async function POApprovalsCard() {
-  if (!process.env.MONDAY_API_KEY) {
-    return (
-      <Card title="POs awaiting approval">
-        <ConfigState envVar="MONDAY_API_KEY" />
-      </Card>
-    )
-  }
-  if (!process.env.MONDAY_PO_BOARD_ID) {
-    return (
-      <Card title="POs awaiting approval">
-        <ConfigState envVar="MONDAY_PO_BOARD_ID" />
-      </Card>
-    )
+  if (!process.env.MONDAY_API_KEY || !process.env.MONDAY_PO_BOARD_ID) {
+    return null
   }
 
   try {
@@ -37,11 +28,7 @@ export async function POApprovalsCard() {
       return status?.text?.toLowerCase().includes("pending")
     })
     if (pending.length === 0) {
-      return (
-        <Card title="POs awaiting approval">
-          <EmptyState>Nothing waiting on you.</EmptyState>
-        </Card>
-      )
+      return null
     }
     const visible = pending.slice(0, 5)
     const overflow = pending.length - visible.length
