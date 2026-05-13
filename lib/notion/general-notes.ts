@@ -1,10 +1,17 @@
 /**
- * General Notes reader (cross-project).
+ * General Notes reader.
  *
- * Schema: 14 categories (General, Design, Site, Commercial, Delivery, Safety,
- * Material, Logistics, QA, Fixings, Workshop, Programme, Drawings, Costing).
- * Priority: High / Medium / Low.
- * Status: Incomplete / Constant / In Progress / In Future / Done.
+ * Real database schema (verified via /v1/databases query 2026-05-13):
+ *   - Note            title       (the headline)
+ *   - Notes           rich_text   (the body)
+ *   - Project Number  rich_text   (e.g. "411"; not a select)
+ *   - Priority        select      (High | Medium | Low)
+ *   - Status          status      (Incomplete | Constant | In progress | In Future | Done)
+ *   - Date            last_edited_time
+ *
+ * There is no Category column on this database, despite earlier docs
+ * mentioning 14 categories. The card renders a category badge only when
+ * one is present, so a missing value is harmless.
  */
 import {
   queryDataSource,
@@ -12,8 +19,6 @@ import {
   getRichText,
   getSelect,
   getStatus,
-  getMultiSelect,
-  getDate,
   getCreatedTime,
 } from "./helpers"
 
@@ -41,17 +46,22 @@ function mapNote(page: {
   properties: Record<string, unknown>
   url?: string
   created_time?: string
+  last_edited_time?: string
 }): GeneralNote {
   const props = page.properties
+  // Project lives in a rich_text column called "Project Number" (note the
+  // space). Fall back to a plain "Project" lookup for resilience if the
+  // schema is ever renamed.
+  const projectText = getRichText(props, "Project Number") || getRichText(props, "Project")
   return {
     id: page.id,
     title: getTitle(props) || "(no title)",
-    body: getRichText(props, "Body") ?? getRichText(props, "Notes") ?? getRichText(props, "Description") ?? "",
-    category: getSelect(props, "Category"),
+    body: getRichText(props, "Notes") || getRichText(props, "Body") || getRichText(props, "Description"),
+    category: getSelect(props, "Category"), // not in current schema; will be null
     priority: getSelect(props, "Priority"),
     status: getStatus(props, "Status") ?? getSelect(props, "Status"),
-    project: getSelect(props, "Project") ?? (getMultiSelect(props, "Project")[0] ?? null),
-    date: getDate(props, "Date"),
+    project: projectText || null,
+    date: page.last_edited_time ?? null,
     url: page.url,
     createdAt: page.created_time ?? getCreatedTime(props) ?? undefined,
   }
@@ -65,15 +75,26 @@ export async function getGeneralNotes(opts?: {
   limit?: number
 }): Promise<GeneralNote[]> {
   const filters: Array<Record<string, unknown>> = []
-  if (opts?.project) filters.push({ property: "Project", select: { equals: opts.project } })
+  // Project is rich_text — use `contains` so "411" matches "411", "411 ",
+  // "Project 411", etc. without forcing an exact-match equality.
+  if (opts?.project) {
+    filters.push({ property: "Project Number", rich_text: { contains: opts.project } })
+  }
   if (opts?.category) filters.push({ property: "Category", select: { equals: opts.category } })
   if (opts?.priority) filters.push({ property: "Priority", select: { equals: opts.priority } })
-  if (opts?.status) filters.push({ or: [{ property: "Status", status: { equals: opts.status } }, { property: "Status", select: { equals: opts.status } }] })
+  if (opts?.status) {
+    filters.push({
+      or: [
+        { property: "Status", status: { equals: opts.status } },
+        { property: "Status", select: { equals: opts.status } },
+      ],
+    })
+  }
   const filter = filters.length === 0 ? undefined : filters.length === 1 ? filters[0] : { and: filters }
   const rows = await queryDataSource({
     databaseId: db(),
     filter,
-    sorts: [{ timestamp: "created_time", direction: "descending" }],
+    sorts: [{ timestamp: "last_edited_time", direction: "descending" }],
     pageSize: opts?.limit ?? 50,
   })
   return rows.map(mapNote)
