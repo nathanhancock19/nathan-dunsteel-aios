@@ -100,16 +100,16 @@ export function POCard({
 
   if (done) {
     return (
-      <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-4 opacity-60">
-        <p className="text-sm text-neutral-400">{item.name} — actioned</p>
+      <div className="rounded-lg border border-rule bg-surface-2 p-4 opacity-60">
+        <p className="text-sm text-muted">{item.name} — actioned</p>
       </div>
     )
   }
 
   return (
-    <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-4">
+    <div className="rounded-lg border border-rule bg-surface-2 p-4">
       <div className="mb-1 flex items-start justify-between gap-2">
-        <p className="text-sm font-semibold text-neutral-100">{item.name}</p>
+        <p className="text-sm font-semibold text-cream">{item.name}</p>
         {status && (
           <span className="shrink-0 rounded-full bg-yellow-900 px-2 py-0.5 text-xs font-medium text-yellow-300">
             {status}
@@ -117,10 +117,10 @@ export function POCard({
         )}
       </div>
 
-      <div className="mb-3 space-y-0.5 text-xs text-neutral-500">
+      <div className="mb-3 space-y-0.5 text-xs text-muted">
         {date && (
           <p>
-            <span className="text-neutral-600">Invoice Date:</span> {date}
+            <span className="text-fg-subtle">Invoice Date:</span> {date}
           </p>
         )}
         <p>
@@ -136,26 +136,26 @@ export function POCard({
       </div>
 
       {additionalComments && (
-        <div className="mb-3 rounded-md border border-neutral-800 bg-neutral-950 px-3 py-2 text-xs leading-relaxed text-neutral-400">
-          <p className="mb-1 text-[10px] font-medium uppercase tracking-wider text-neutral-600">
+        <div className="mb-3 rounded-md border border-rule bg-ink px-3 py-2 text-xs leading-relaxed text-muted">
+          <p className="mb-1 text-[10px] font-medium uppercase tracking-wider text-fg-subtle">
             Additional comments
           </p>
-          <p className="whitespace-pre-wrap text-neutral-300">{additionalComments}</p>
+          <p className="whitespace-pre-wrap text-fg-muted">{additionalComments}</p>
         </div>
       )}
 
       {/* Inline allocation - always visible so Nathan can change Job/Scope + Cost Code
           directly before clicking Approve, no extra panel toggle. */}
-      <div className="mb-3 space-y-2 rounded-md border border-neutral-800 bg-neutral-950/60 p-3">
+      <div className="mb-3 space-y-2 rounded-md border border-rule bg-ink/60 p-3">
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           <div className="space-y-1">
-            <label className="block text-[10px] font-medium uppercase tracking-wider text-neutral-500">
+            <label className="block text-[10px] font-medium uppercase tracking-wider text-muted">
               Job / Scope
             </label>
             <select
               value={jobScopeId}
               onChange={(e) => setJobScopeId(e.target.value)}
-              className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-2 py-1.5 text-xs text-neutral-100 focus:outline-none focus:ring-1 focus:ring-fg-muted"
+              className="w-full rounded-md border border-rule bg-surface-2 px-2 py-1.5 text-xs text-cream focus:outline-none focus:ring-1 focus:ring-fg-muted"
             >
               <option value="">{jobScope || "— Unallocated —"}</option>
               {jobScopeOptions.map((opt) => (
@@ -167,13 +167,13 @@ export function POCard({
           </div>
 
           <div className="space-y-1">
-            <label className="block text-[10px] font-medium uppercase tracking-wider text-neutral-500">
+            <label className="block text-[10px] font-medium uppercase tracking-wider text-muted">
               Cost Code
             </label>
             <select
               value={costCodeLabel}
               onChange={(e) => setCostCodeLabel(e.target.value)}
-              className="w-full rounded-md border border-neutral-700 bg-neutral-900 px-2 py-1.5 text-xs text-neutral-100 focus:outline-none focus:ring-1 focus:ring-fg-muted"
+              className="w-full rounded-md border border-rule bg-surface-2 px-2 py-1.5 text-xs text-cream focus:outline-none focus:ring-1 focus:ring-fg-muted"
             >
               <option value="">{costCode || "— Unallocated —"}</option>
               {costCodeOptions.map((opt) => (
@@ -210,7 +210,7 @@ export function POCard({
           <button
             disabled={loading !== null}
             onClick={() => setShowQuery(true)}
-            className="rounded-md border border-neutral-700 px-3 py-1.5 text-xs font-medium text-neutral-300 hover:border-neutral-500 disabled:opacity-50"
+            className="rounded-md border border-rule px-3 py-1.5 text-xs font-medium text-fg-muted hover:border-fg-muted disabled:opacity-50"
           >
             Query
           </button>
@@ -224,7 +224,7 @@ export function POCard({
             onChange={(e) => setQueryMsg(e.target.value)}
             placeholder="What needs clarification? (optional)"
             rows={2}
-            className="w-full rounded-md border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm text-neutral-100 placeholder-neutral-600 focus:outline-none focus:ring-1 focus:ring-fg-muted"
+            className="w-full rounded-md border border-rule bg-surface-3 px-3 py-2 text-sm text-cream placeholder-fg-subtle focus:outline-none focus:ring-1 focus:ring-fg-muted"
           />
           <div className="flex gap-2">
             <button
@@ -242,7 +242,7 @@ export function POCard({
             </button>
             <button
               onClick={() => setShowQuery(false)}
-              className="text-xs text-neutral-500 hover:text-neutral-300"
+              className="text-xs text-muted hover:text-cream"
             >
               Cancel
             </button>

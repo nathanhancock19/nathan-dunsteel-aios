@@ -13,6 +13,7 @@ import {
   getCheckbox,
   getCreatedTime,
 } from "./helpers"
+import { sydneyTodayIso } from "@/lib/utils/today"
 
 export type DiaryEntry = {
   id: string
@@ -47,7 +48,7 @@ function subconDb(): string {
 }
 
 function todayIso(): string {
-  return new Date().toLocaleDateString("en-CA", { timeZone: "Australia/Sydney" })
+  return sydneyTodayIso()
 }
 
 function mapEntry(

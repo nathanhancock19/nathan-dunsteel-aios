@@ -8,9 +8,10 @@ import { listRecords } from "./client"
 import { TABLES } from "./schema"
 import type { DayDocketFields } from "./types"
 import type { Record as AirtableRecord, FieldSet } from "airtable"
+import { sydneyTodayIso } from "@/lib/utils/today"
 
 function todayISO(): string {
-  return new Date().toLocaleDateString("en-CA", { timeZone: "Australia/Sydney" })
+  return sydneyTodayIso()
 }
 
 /**

@@ -53,7 +53,7 @@ export function POList({ items, jobScopeOptions, costCodeOptions, suggestions }:
   }
 
   if (pending.length === 0) {
-    return <p className="text-sm text-neutral-500">No POs waiting on you.</p>
+    return <p className="text-sm text-muted">No POs waiting on you.</p>
   }
 
   return (

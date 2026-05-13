@@ -27,15 +27,15 @@ export async function SiteDiaryCard() {
                 href={e.url}
                 target="_blank"
                 rel="noreferrer"
-                className="text-neutral-200 hover:text-fg"
+                className="text-cream hover:text-fg"
               >
                 {e.title}
               </a>
               {e.project ? (
-                <span className="ml-2 text-xs text-neutral-500">{e.project}</span>
+                <span className="ml-2 text-xs text-muted">{e.project}</span>
               ) : null}
               {e.date ? (
-                <span className="ml-2 text-xs text-neutral-500">{e.date}</span>
+                <span className="ml-2 text-xs text-muted">{e.date}</span>
               ) : null}
             </li>
           ))}

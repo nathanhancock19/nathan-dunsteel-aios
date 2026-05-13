@@ -11,7 +11,7 @@
  */
 
 import { auth } from "@/lib/auth"
-import { getClaude, SYSTEM_PROMPT, ASSISTANT_MODEL, ASSISTANT_MAX_TOKENS, ASSISTANT_TEMPERATURE } from "@/lib/claude/client"
+import { getClaude, buildSystemPrompt, ASSISTANT_MODEL, ASSISTANT_MAX_TOKENS, ASSISTANT_TEMPERATURE } from "@/lib/claude/client"
 import { tools, runTool } from "@/lib/claude/tools"
 import { runInbox } from "@/lib/inbox"
 import { recentDecisions } from "@/lib/decisions/log"
@@ -64,6 +64,7 @@ export async function POST(req: Request) {
         // (b) executes a tool and feeds the result back.
         let safetyTurns = 0
         const maxTurns = 6
+        const systemPrompt = buildSystemPrompt()
 
         while (safetyTurns++ < maxTurns) {
           const response = await client.messages.create({
@@ -73,7 +74,7 @@ export async function POST(req: Request) {
             system: [
               {
                 type: "text",
-                text: SYSTEM_PROMPT,
+                text: systemPrompt,
                 cache_control: { type: "ephemeral" },
               },
               {

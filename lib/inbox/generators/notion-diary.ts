@@ -9,17 +9,8 @@
  */
 
 import { getRecentSiteDiaryEntries } from "@/lib/notion"
+import { sydneyToday } from "@/lib/utils/today"
 import type { InboxItem } from "../types"
-
-function todayISO(): string {
-  return new Date().toLocaleDateString("en-CA", { timeZone: "Australia/Sydney" })
-}
-
-function yesterdayISO(): string {
-  const d = new Date()
-  d.setDate(d.getDate() - 1)
-  return d.toLocaleDateString("en-CA", { timeZone: "Australia/Sydney" })
-}
 
 export async function generateDiaryItems(): Promise<InboxItem[]> {
   if (!process.env.NOTION_SITE_DIARY_DATABASE_ID || !process.env.NOTION_API_KEY) {
@@ -33,8 +24,7 @@ export async function generateDiaryItems(): Promise<InboxItem[]> {
     return []
   }
 
-  const yesterday = yesterdayISO()
-  const today = todayISO()
+  const { isoDate: today, yesterdayIso: yesterday } = sydneyToday()
 
   // Pull the latest entry's date (string-compare on ISO works).
   const latestDate = entries[0]?.date ?? entries[0]?.id
