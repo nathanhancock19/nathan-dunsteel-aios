@@ -33,23 +33,23 @@ export function QuoteCard({ quote, onApprove, onReject }: Props) {
 
   if (done) {
     return (
-      <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-4 opacity-60">
-        <p className="text-sm text-neutral-400">{quote.supplier} — actioned</p>
+      <div className="rounded-lg border border-rule bg-surface-2 p-4 opacity-60">
+        <p className="text-sm text-muted">{quote.supplier} — actioned</p>
       </div>
     )
   }
 
   return (
-    <div className="rounded-lg border border-neutral-800 bg-neutral-900 p-4">
+    <div className="rounded-lg border border-rule bg-surface-2 p-4">
       <div className="mb-1 flex items-start justify-between gap-2">
-        <p className="text-sm font-semibold text-neutral-100">{quote.supplier}</p>
+        <p className="text-sm font-semibold text-cream">{quote.supplier}</p>
         <span className="shrink-0 text-sm font-medium text-fg">
           {formatCurrency(quote.amount)}
         </span>
       </div>
 
       {quote.submittedAt && (
-        <p className="mb-3 text-xs text-neutral-500">
+        <p className="mb-3 text-xs text-muted">
           Submitted {new Date(quote.submittedAt).toLocaleDateString("en-AU")}
         </p>
       )}
@@ -70,7 +70,7 @@ export function QuoteCard({ quote, onApprove, onReject }: Props) {
         <button
           disabled={loading !== null}
           onClick={() => act("reject", () => onReject(quote.id, quote.supplier))}
-          className="rounded-md border border-neutral-700 px-3 py-1.5 text-xs font-medium text-red-400 hover:border-red-700 disabled:opacity-50"
+          className="rounded-md border border-rule px-3 py-1.5 text-xs font-medium text-red-400 hover:border-red-700 disabled:opacity-50"
         >
           {loading === "reject" ? "Rejecting..." : "Reject"}
         </button>

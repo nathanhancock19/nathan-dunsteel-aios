@@ -11,6 +11,7 @@
  */
 
 import { parse } from "csv-parse/sync"
+import { sydneyToday, sydneyTodayIso } from "@/lib/utils/today"
 
 const DEFAULT_SHEET_ID = "1_IKGGCq2R7Dbs7N5glN3-DmgAYrG-Edt8XI7u8kKDDU"
 
@@ -142,7 +143,7 @@ function extractJobsForColumn(
 }
 
 function todayISO(): string {
-  return new Date().toLocaleDateString("en-CA", { timeZone: "Australia/Sydney" })
+  return sydneyTodayIso()
 }
 
 /**
@@ -177,11 +178,44 @@ export async function getDeliveriesForWeek(opts?: {
   const rows = await fetchCsv(sheetId)
   const results: DeliveriesForDay[] = []
 
-  const now = new Date()
+  // 7 days starting today, in Sydney calendar order. Using sydneyToday()
+  // keeps the loop aligned to Sydney midnight regardless of server TZ.
+  const t = sydneyToday()
+  const startIso = t.isoDate
+  const [startY, startM, startD] = startIso.split("-").map(Number)
   for (let i = 0; i < 7; i++) {
-    const d = new Date(now)
-    d.setDate(now.getDate() + i)
+    const d = new Date(Date.UTC(startY, startM - 1, startD + i, 2, 0, 0))
     const date = d.toLocaleDateString("en-CA", { timeZone: "Australia/Sydney" })
+    const located = findColumnForDate(rows, date)
+    if (!located) {
+      results.push({ date, monthLabel: "", dayName: "", jobs: [] })
+      continue
+    }
+    const { colIdx, monthLabel, dayName } = located
+    const jobs = extractJobsForColumn(rows, colIdx, opts?.projectFilter)
+    results.push({ date, monthLabel, dayName, jobs })
+  }
+
+  return results
+}
+
+/**
+ * Fetch deliveries for Mon-Sun of the current Sydney week.
+ *
+ * Differs from getDeliveriesForWeek: that returns "today + 6"; this returns
+ * "this calendar week". Used by the dashboard DeliveriesCard so the strip
+ * is stable through the week instead of rolling each day.
+ */
+export async function getDeliveriesForCurrentWeek(opts?: {
+  projectFilter?: string
+  sheetId?: string
+}): Promise<DeliveriesForDay[]> {
+  const sheetId = opts?.sheetId ?? process.env.DELIVERY_SCHEDULE_SHEET_ID ?? DEFAULT_SHEET_ID
+  const rows = await fetchCsv(sheetId)
+  const results: DeliveriesForDay[] = []
+
+  const t = sydneyToday()
+  for (const date of t.weekDaysIso) {
     const located = findColumnForDate(rows, date)
     if (!located) {
       results.push({ date, monthLabel: "", dayName: "", jobs: [] })

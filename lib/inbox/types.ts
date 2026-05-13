@@ -26,6 +26,21 @@ export type InboxItemAction = {
   variant?: "primary" | "ghost"
 }
 
+/**
+ * Claude-scored relevance for an inbox item.
+ *
+ * - "high"   — needs attention today; ties to active project state.
+ * - "medium" — relevant this week; collapsed by default on dashboard.
+ * - "drop"   — FYI / duplicate / automated noise; hidden by default.
+ *
+ * `reason` is a one-line justification, max 12 words. Mutated in place
+ * on the InboxItem by triageInboxItems().
+ */
+export type TriageScore = {
+  score: "high" | "medium" | "drop"
+  reason: string
+}
+
 export type InboxItem = {
   /** Stable across generator runs. Source + business id (e.g. "monday-po:12345"). */
   id: string
@@ -41,6 +56,8 @@ export type InboxItem = {
   actions: InboxItemAction[]
   /** Source-specific payload for downstream renderers / debugging. */
   raw?: Record<string, unknown>
+  /** Claude triage scoring; null until triageInboxItems() has run. */
+  triage?: TriageScore | null
 }
 
 /** Per-device state that overrides what generators emit. */

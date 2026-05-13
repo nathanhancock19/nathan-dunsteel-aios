@@ -33,7 +33,7 @@ export function QuoteList({ quotes }: Props) {
   }
 
   if (quotes.length === 0) {
-    return <p className="text-sm text-neutral-500">No quotes waiting on you.</p>
+    return <p className="text-sm text-muted">No quotes waiting on you.</p>
   }
 
   return (

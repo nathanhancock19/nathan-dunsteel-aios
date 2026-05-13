@@ -9,6 +9,7 @@
  */
 
 import Anthropic from "@anthropic-ai/sdk"
+import { sydneyTodayIso } from "@/lib/utils/today"
 
 let _client: Anthropic | null = null
 
@@ -24,7 +25,15 @@ export const ASSISTANT_MODEL = "claude-sonnet-4-6"
 export const ASSISTANT_MAX_TOKENS = 2000
 export const ASSISTANT_TEMPERATURE = 0.2
 
-export const SYSTEM_PROMPT = `You are the AIOS Assistant for Nathan Hancock, the Project Coordinator at Dunsteel for Project 411 (AW Edwards, Air Trunk SYD2, Lane Cove).
+/**
+ * Build the system prompt for the assistant. Called per request so today's
+ * date is always current Sydney date, not whatever the server booted on.
+ */
+export function buildSystemPrompt(): string {
+  return SYSTEM_PROMPT_TEMPLATE.replace("{{TODAY}}", sydneyTodayIso())
+}
+
+const SYSTEM_PROMPT_TEMPLATE = `You are the AIOS Assistant for Nathan Hancock, the Project Coordinator at Dunsteel for Project 411 (AW Edwards, Air Trunk SYD2, Lane Cove).
 
 Your job is to help Nathan run his day. Read his connected systems quickly. Take actions on his behalf when he asks, after confirming the specific action you're about to take. Be concise. Be specific. Lead with the answer, follow with supporting detail only if useful.
 
@@ -37,6 +46,7 @@ WRITE-TOOL DISCIPLINE (load-bearing):
 
 Read tools (no confirm needed, run freely):
 - query_dockets, query_projects, query_deliveries, today_site_activity, get_project_forecast, query_inbox
+- query_contract_clauses, query_contract_full   when Nathan asks contractual questions (variations entitlement, payment terms, EOT triggers, defect liability)
 
 Write tools (require confirm-before-call):
 - monday_approve_po       approve a PO with optional allocation
@@ -45,7 +55,7 @@ Write tools (require confirm-before-call):
 
 Defaults:
 - The user's primary project is Project 411 unless he explicitly mentions another.
-- Today's date is ${new Date().toISOString().slice(0, 10)} for any "today" / "this week" interpretation.
+- Today's date is {{TODAY}} (Sydney) for any "today" / "this week" interpretation.
 - Australian English. No em dashes anywhere. Use a hyphen, colon, or restructure the sentence.
 
 Format guidance:

@@ -1,3 +1,4 @@
+import Link from "next/link"
 import { listBoardItems } from "@/lib/monday"
 import { Card, ConfigState, EmptyState, ErrorState } from "./Card"
 
@@ -30,15 +31,25 @@ export async function POApprovalsCard() {
         </Card>
       )
     }
+    const visible = pending.slice(0, 5)
+    const overflow = pending.length - visible.length
     return (
       <Card title="POs awaiting approval" subtitle={`${pending.length} pending`}>
         <ul className="space-y-2 text-sm">
-          {pending.slice(0, 3).map((item) => (
-            <li key={item.id} className="text-neutral-200">
+          {visible.map((item) => (
+            <li key={item.id} className="text-cream">
               {item.name}
             </li>
           ))}
         </ul>
+        {overflow > 0 && (
+          <Link
+            href="/approvals"
+            className="mt-3 inline-block text-xs text-muted hover:text-cream"
+          >
+            View all {pending.length} pending →
+          </Link>
+        )}
       </Card>
     )
   } catch (err) {

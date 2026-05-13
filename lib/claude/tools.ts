@@ -26,6 +26,7 @@ import { getHighPriorityNotes, getGeneralNotes } from "@/lib/notion/general-note
 import { getPendingVoiceMemos } from "@/lib/notion/voice-memos"
 import { addGeneralNote, markDefectStatus } from "@/lib/notion/write"
 import { getMerSummary, getMerScopes, getMerClaimsForMonth, getMerSyncStatus } from "@/lib/strumis/queries"
+import { queryContractClauses, queryContractFull } from "@/lib/knowledge/contracts"
 import { listWorkflows, getRecentFailures } from "@/lib/n8n/client"
 import { getCategorisedMessages, outlookConfigured } from "@/lib/outlook/client"
 import { listVariations, createVariationDraft } from "@/lib/airtable/variations"
@@ -117,6 +118,21 @@ export const createVariationSchema = z.object({
   variationNumber: z.string().min(1).max(20),
   title: z.string().min(1).max(200),
   confirmed: z.literal(true),
+})
+
+export const queryContractClausesSchema = z.object({
+  projectNumber: z.string().min(1).describe("e.g. '411'. Defaults to AIOS_PRIMARY_PROJECT_NUMBER if omitted.").optional(),
+  topic: z
+    .string()
+    .optional()
+    .describe(
+      "Free-text topic to filter clauses by (e.g. 'variations', 'payment terms', 'EOT', 'defect liability'). Omit to return all clause keys.",
+    ),
+})
+
+export const queryContractFullSchema = z.object({
+  projectNumber: z.string().min(1).optional(),
+  maxChars: z.number().int().min(500).max(20000).default(8000),
 })
 
 export const tools: ToolDefinition[] = [
@@ -449,6 +465,47 @@ export const tools: ToolDefinition[] = [
         confirmed: { type: "boolean" },
       },
       required: ["pageId", "status", "confirmed"],
+    } as Anthropic.Tool["input_schema"],
+  },
+
+  // ===== Knowledge docs (contract, programme) =====
+  {
+    name: "query_contract_clauses",
+    description:
+      "Look up structured clauses from a project's ingested contract (variations clause, payment terms, retention, EOT triggers, defect liability period, scope inclusions/exclusions, key dates, key contacts). Use this whenever Nathan asks contractual questions: 'what does the contract say about variations', 'how long is defect liability', 'when does payment fall due'. Returns matching clauses with their values. If `topic` is omitted, returns the list of available clause keys.",
+    input_schema: {
+      type: "object",
+      properties: {
+        projectNumber: {
+          type: "string",
+          description: "Project number (e.g. '411'). Defaults to the primary project.",
+        },
+        topic: {
+          type: "string",
+          description:
+            "Free-text topic to match against clause names + content (case-insensitive). Omit to list all clause keys.",
+        },
+      },
+      required: [],
+    } as Anthropic.Tool["input_schema"],
+  },
+  {
+    name: "query_contract_full",
+    description:
+      "Return the full parsed markdown body of the project's contract. Use only when query_contract_clauses cannot answer the question (e.g. unusual clause not in the structured extraction). Capped to 8k chars by default to keep the context window tight.",
+    input_schema: {
+      type: "object",
+      properties: {
+        projectNumber: {
+          type: "string",
+          description: "Project number (e.g. '411'). Defaults to the primary project.",
+        },
+        maxChars: {
+          type: "integer",
+          description: "Max characters to return, 500-20000. Default 8000.",
+        },
+      },
+      required: [],
     } as Anthropic.Tool["input_schema"],
   },
 ]
@@ -833,6 +890,22 @@ export async function runTool(name: string, input: unknown): Promise<ToolResult>
         sourceId: args.pageId,
       } as Parameters<typeof logDecision>[0])
       return { ok: true, data: { updated: true, pageId: args.pageId, status: args.status } }
+    }
+
+    if (name === "query_contract_clauses") {
+      const args = queryContractClausesSchema.parse(input)
+      const projectNumber = args.projectNumber ?? projectScope()
+      if (!projectNumber) return { ok: false, error: "No project number" }
+      const result = await queryContractClauses(projectNumber, args.topic)
+      return { ok: true, data: result }
+    }
+
+    if (name === "query_contract_full") {
+      const args = queryContractFullSchema.parse(input)
+      const projectNumber = args.projectNumber ?? projectScope()
+      if (!projectNumber) return { ok: false, error: "No project number" }
+      const result = await queryContractFull(projectNumber, args.maxChars)
+      return { ok: true, data: result }
     }
 
     return { ok: false, error: `Unknown tool: ${name}` }
