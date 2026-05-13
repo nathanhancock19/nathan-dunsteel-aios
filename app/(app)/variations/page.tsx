@@ -59,7 +59,7 @@ export default async function VariationsPage() {
                       <span className="text-muted">{v.variationNumber}</span> {v.title}
                     </p>
                     {v.createdAt ? (
-                      <p className="mt-0.5 text-xs text-muted">{new Date(v.createdAt).toLocaleDateString("en-AU")}</p>
+                      <p className="mt-0.5 text-xs text-muted">{new Date(v.createdAt).toLocaleDateString("en-AU", { timeZone: "Australia/Sydney" })}</p>
                     ) : null}
                   </div>
                   <div className="text-right">

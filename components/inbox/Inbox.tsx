@@ -43,6 +43,15 @@ export function Inbox() {
     }
   }, [refreshTick])
 
+  // Listen for the Sync All button so the inbox refetches when the user
+  // clicks it. Without this, router.refresh re-renders server components
+  // but the Inbox stays stuck on its own internal state.
+  useEffect(() => {
+    const handler = () => setRefreshTick((t) => t + 1)
+    window.addEventListener("aios:sync-complete", handler)
+    return () => window.removeEventListener("aios:sync-complete", handler)
+  }, [])
+
   // Apply per-device state.
   const visible = useMemo(() => {
     if (!items) return []
@@ -106,10 +115,10 @@ export function Inbox() {
         <p className="text-sm font-medium text-cream">You&apos;re clear.</p>
         <p className="mt-1 text-xs text-muted">
           {new Date().toLocaleDateString("en-AU", {
+            timeZone: "Australia/Sydney",
             weekday: "long",
             day: "numeric",
             month: "long",
-            timeZone: "Australia/Sydney",
           })}
         </p>
       </div>

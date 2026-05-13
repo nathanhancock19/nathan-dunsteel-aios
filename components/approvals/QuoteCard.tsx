@@ -50,7 +50,7 @@ export function QuoteCard({ quote, onApprove, onReject }: Props) {
 
       {quote.submittedAt && (
         <p className="mb-3 text-xs text-muted">
-          Submitted {new Date(quote.submittedAt).toLocaleDateString("en-AU")}
+          Submitted {new Date(quote.submittedAt).toLocaleDateString("en-AU", { timeZone: "Australia/Sydney" })}
         </p>
       )}
 

@@ -12,12 +12,7 @@ import type {
   DeliveryNoteFields,
 } from "./types"
 import type { Record as AirtableRecord, FieldSet } from "airtable"
-
-function todayISO(): string {
-  const d = new Date()
-  const tz = d.getTimezoneOffset() * 60000
-  return new Date(d.getTime() - tz).toISOString().slice(0, 10)
-}
+import { sydneyTodayIso, sydneyDateOffsetIso } from "@/lib/utils/today"
 
 function projectScope(): string | null {
   return process.env.AIOS_PRIMARY_PROJECT_NUMBER ?? null
@@ -106,11 +101,10 @@ export async function listDeliveries(opts?: {
  * Get all deliveries for today + next 7 days (default view).
  */
 export async function getUpcomingDeliveries(): Promise<Delivery[]> {
-  const today = todayISO()
-  const d = new Date()
-  d.setDate(d.getDate() + 7)
-  const weekOut = d.toISOString().slice(0, 10)
-  return listDeliveries({ fromDate: today, toDate: weekOut })
+  return listDeliveries({
+    fromDate: sydneyTodayIso(),
+    toDate: sydneyDateOffsetIso(7),
+  })
 }
 
 export async function getDelivery(id: string): Promise<Delivery> {

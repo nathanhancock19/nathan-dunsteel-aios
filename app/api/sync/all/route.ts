@@ -12,7 +12,8 @@
  */
 import { NextResponse } from "next/server"
 import { auth } from "@/lib/auth"
-import { runInbox } from "@/lib/inbox"
+import { runInbox, clearInboxCache } from "@/lib/inbox"
+import { clearTriageContextCache } from "@/lib/inbox/triage"
 import { getDeliveriesForCurrentWeek } from "@/lib/sheets/deliveries"
 import { getDiaryEntriesForDate } from "@/lib/notion/diary"
 import { getRecentSiteDiaryEntries, getHighPriorityNotes } from "@/lib/notion"
@@ -86,6 +87,12 @@ export async function POST() {
   if (!session) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 })
   }
+
+  // Critical: drop server-side caches before re-pulling. Without this, the
+  // sync sees its own cached output and the UI keeps showing stale data.
+  // Inbox cache (60s TTL per generator) + triage context cache (5m).
+  clearInboxCache()
+  clearTriageContextCache()
 
   const started = Date.now()
   const results = await runAll()

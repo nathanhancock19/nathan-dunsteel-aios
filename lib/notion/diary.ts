@@ -13,7 +13,7 @@ import {
   getCheckbox,
   getCreatedTime,
 } from "./helpers"
-import { sydneyTodayIso } from "@/lib/utils/today"
+import { sydneyToday, sydneyTodayIso, sydneyDateOffsetIso } from "@/lib/utils/today"
 
 export type DiaryEntry = {
   id: string
@@ -112,7 +112,7 @@ export async function getRecentDiaryEntries(limit = 10): Promise<DiaryEntry[]> {
 
 export async function getDiaryFlaggedEntries(opts?: { days?: number }): Promise<DiaryEntry[]> {
   const days = opts?.days ?? 7
-  const since = new Date(Date.now() - days * 86400_000).toISOString().slice(0, 10)
+  const since = sydneyDateOffsetIso(-days)
   const filter = {
     and: [
       { property: "Date", date: { on_or_after: since } },
@@ -140,12 +140,9 @@ export async function getDiaryFlaggedEntries(opts?: { days?: number }): Promise<
 }
 
 export async function getDiaryEntriesThisWeek(): Promise<DiaryEntry[]> {
-  const today = new Date()
-  const dayOfWeek = today.getDay() // 0=Sun, 1=Mon...
-  const monday = new Date(today)
-  monday.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1))
-  const mondayIso = monday.toLocaleDateString("en-CA", { timeZone: "Australia/Sydney" })
-  const todayIsoStr = today.toLocaleDateString("en-CA", { timeZone: "Australia/Sydney" })
+  const t = sydneyToday()
+  const mondayIso = t.weekDaysIso[0] // weekDaysIso[0] is Monday
+  const todayIsoStr = t.isoDate
   const filter = {
     and: [
       { property: "Date", date: { on_or_after: mondayIso } },

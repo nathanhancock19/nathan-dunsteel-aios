@@ -4,8 +4,10 @@ import { getDiaryEntriesThisWeek, type DiaryEntry } from "@/lib/notion/diary"
 export const dynamic = "force-dynamic"
 
 function formatDate(iso: string): string {
-  const d = new Date(iso + "T00:00:00")
-  return d.toLocaleDateString("en-AU", { weekday: "short", day: "numeric", month: "short" })
+  // Add noon UTC offset so the Sydney TZ formatter never rolls to the
+  // wrong calendar day around DST transitions or midnight.
+  const d = new Date(iso + "T02:00:00.000Z")
+  return d.toLocaleDateString("en-AU", { timeZone: "Australia/Sydney", weekday: "short", day: "numeric", month: "short" })
 }
 
 function isToday(iso: string): boolean {

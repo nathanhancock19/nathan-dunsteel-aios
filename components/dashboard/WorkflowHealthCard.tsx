@@ -50,7 +50,7 @@ export async function WorkflowHealthCard() {
                 <span className={`inline-block h-2 w-2 rounded-full ${dot}`} aria-hidden />
                 <span className="flex-1 truncate text-cream">{w.name}</span>
                 <span className="text-[10px] uppercase tracking-wider text-muted">
-                  {last ? new Date(last.startedAt).toLocaleDateString("en-AU", { day: "numeric", month: "short" }) : "no runs"}
+                  {last ? new Date(last.startedAt).toLocaleDateString("en-AU", { timeZone: "Australia/Sydney", day: "numeric", month: "short" }) : "no runs"}
                 </span>
               </li>
             )

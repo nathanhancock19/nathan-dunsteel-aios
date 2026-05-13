@@ -116,23 +116,49 @@ export async function getCategorisedMessages(opts?: {
 /**
  * For a list of messages, check which conversationIds have a sent reply.
  * Returns a Set of conversationIds that Nathan has already replied to.
+ *
+ * Widens the SentItems window to (oldest - 7 days) to absorb clock drift
+ * and pre-flag emails Nathan answered before they were even categorised.
+ * Pages up to 4 pages × 200 = 800 sent items so a busy inbox doesn't drop
+ * replies past the previous 50-item cap.
  */
 export async function getRepliedConversationIds(
   userPrincipalName: string,
   since: string,
 ): Promise<Set<string>> {
   const token = await getToken()
-  const url = new URL(`https://graph.microsoft.com/v1.0/users/${userPrincipalName}/mailFolders/SentItems/messages`)
-  url.searchParams.set("$top", "50")
-  url.searchParams.set("$filter", `sentDateTime ge ${since}`)
-  url.searchParams.set("$select", "conversationId,sentDateTime")
-  const res = await fetch(url.toString(), {
-    headers: { Authorization: `Bearer ${token}` },
-    cache: "no-store",
-  })
-  if (!res.ok) return new Set()
-  const data = (await res.json()) as { value: Array<{ conversationId: string }> }
-  return new Set(data.value.map((m) => m.conversationId))
+  // Back up the lower bound by 7 days so a reply Nathan sent before the
+  // category was applied still counts as having been responded to.
+  const sinceDate = new Date(since)
+  if (!Number.isNaN(sinceDate.getTime())) {
+    sinceDate.setUTCDate(sinceDate.getUTCDate() - 7)
+  }
+  const lowerBound = Number.isNaN(sinceDate.getTime()) ? since : sinceDate.toISOString()
+
+  const ids = new Set<string>()
+  let url: string | undefined =
+    `https://graph.microsoft.com/v1.0/users/${userPrincipalName}/mailFolders/SentItems/messages` +
+    `?$top=200` +
+    `&$filter=${encodeURIComponent(`sentDateTime ge ${lowerBound}`)}` +
+    `&$select=conversationId,sentDateTime` +
+    `&$orderby=sentDateTime%20desc`
+
+  let pages = 0
+  while (url && pages < 4) {
+    pages++
+    const res: Response = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
+    })
+    if (!res.ok) break
+    const data = (await res.json()) as {
+      value: Array<{ conversationId: string }>
+      "@odata.nextLink"?: string
+    }
+    for (const m of data.value) ids.add(m.conversationId)
+    url = data["@odata.nextLink"]
+  }
+  return ids
 }
 
 export async function pingOutlook(): Promise<{ ok: boolean; configured: boolean; error?: string }> {

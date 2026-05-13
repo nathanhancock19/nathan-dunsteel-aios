@@ -254,7 +254,7 @@ function ForecastSnapshot({
       <div className="space-y-1 text-xs text-muted">
         <p>Forecast loaded ({forecast.rows.length} rows). No row matched this project number.</p>
         {forecast.lastEdited ? (
-          <p>Last edited {new Date(forecast.lastEdited).toLocaleDateString("en-AU")}</p>
+          <p>Last edited {new Date(forecast.lastEdited).toLocaleDateString("en-AU", { timeZone: "Australia/Sydney" })}</p>
         ) : null}
       </div>
     )

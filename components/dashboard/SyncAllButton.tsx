@@ -50,6 +50,12 @@ export function SyncAllButton() {
         return
       }
       setSummary(body)
+      // Server components re-render on router.refresh(); client components
+      // (most notably the Inbox) need an explicit nudge to re-fetch their
+      // own data.
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("aios:sync-complete"))
+      }
       startTransition(() => router.refresh())
     } catch (err) {
       setSummary({

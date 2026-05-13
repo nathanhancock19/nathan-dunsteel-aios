@@ -41,7 +41,11 @@ export async function DeliveriesCard() {
   }
 
   return (
-    <Card title="Deliveries this week" subtitle={`${totalJobs} delivery${totalJobs === 1 ? "" : "ies"}`} icon={Truck}>
+    <Card
+      title="Deliveries this week"
+      subtitle={pluraliseDeliveries(totalJobs)}
+      icon={Truck}
+    >
       <div className="grid grid-cols-7 gap-1">
         {days.map((day, i) => {
           const count = day.jobs.length
@@ -59,7 +63,7 @@ export async function DeliveriesCard() {
                     ? "border-rule bg-surface-2 hover:bg-highlight"
                     : "border-rule/40 bg-transparent text-fg-subtle hover:bg-surface-2"
               }`}
-              title={count === 0 ? "No deliveries" : `${count} delivery${count === 1 ? "" : "ies"}`}
+              title={count === 0 ? "No deliveries" : pluraliseDeliveries(count)}
             >
               <span className="text-[10px] font-semibold uppercase tracking-wider text-fg-subtle">
                 {dayShort}
@@ -78,41 +82,10 @@ export async function DeliveriesCard() {
           )
         })}
       </div>
-      <ul className="mt-4 space-y-3 text-sm">
-        {days
-          .filter((d) => d.jobs.length > 0)
-          .map((day) => (
-            <li key={day.date}>
-              <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wider text-fg-subtle">
-                {day.dayName} {day.date.slice(8)} {day.monthLabel}
-                {day.date === today ? " · today" : ""}
-              </p>
-              <ul className="space-y-1.5">
-                {day.jobs.map((job) => (
-                  <li
-                    key={`${day.date}-${job.jobIndex}`}
-                    className="rounded-md border border-rule bg-surface-2 p-2.5"
-                  >
-                    <div className="flex items-baseline justify-between gap-2">
-                      <span className="font-medium text-fg">{job.project || "(no project)"}</span>
-                      {job.time ? (
-                        <span className="shrink-0 text-xs text-fg-muted">{job.time}</span>
-                      ) : null}
-                    </div>
-                    {job.details ? (
-                      <p className="mt-0.5 whitespace-pre-line text-fg-muted">{job.details}</p>
-                    ) : null}
-                    <div className="mt-1 flex flex-wrap gap-2 text-[11px] text-fg-subtle">
-                      {job.truck ? <span>{job.truck}</span> : null}
-                      {job.pm ? <span>PM: {job.pm}</span> : null}
-                      {job.status ? <span>{job.status}</span> : null}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </li>
-          ))}
-      </ul>
     </Card>
   )
+}
+
+function pluraliseDeliveries(n: number): string {
+  return `${n} deliver${n === 1 ? "y" : "ies"}`
 }

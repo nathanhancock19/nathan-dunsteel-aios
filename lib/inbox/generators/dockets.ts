@@ -7,6 +7,7 @@
  */
 
 import { getTodayDockets } from "@/lib/airtable"
+import { sydneyTodayIso } from "@/lib/utils/today"
 import type { InboxItem } from "../types"
 
 export async function generateDocketItems(): Promise<InboxItem[]> {
@@ -21,7 +22,7 @@ export async function generateDocketItems(): Promise<InboxItem[]> {
 
   return [
     {
-      id: `docket-app:today:${new Date().toISOString().slice(0, 10)}`,
+      id: `docket-app:today:${sydneyTodayIso()}`,
       source: "docket-app",
       urgency: "today",
       title: `${dockets.length} docket${dockets.length === 1 ? "" : "s"} submitted today`,

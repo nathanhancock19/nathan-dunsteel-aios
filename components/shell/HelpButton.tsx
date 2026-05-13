@@ -30,7 +30,7 @@ export function HelpButton() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          title: `AIOS feedback (${new Date().toISOString().slice(0, 10)})`,
+          title: `AIOS feedback (${new Date().toLocaleDateString("en-CA", { timeZone: "Australia/Sydney" })})`,
           body: feedback,
           category: "General",
           priority: "Low",
