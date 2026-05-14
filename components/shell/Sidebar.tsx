@@ -15,6 +15,7 @@ import {
   Settings,
   PanelLeftClose,
   PanelLeftOpen,
+  MessageSquare,
 } from "lucide-react"
 import { useEffect, useState } from "react"
 import { Logo } from "./Logo"
@@ -95,6 +96,7 @@ export function Sidebar({
             <SidebarSection title="Today">
               <SidebarItem href="/dashboard" icon={Home} label="Dashboard" onClick={onItemClick} />
               <SidebarItem href="/dashboard?tab=inbox" icon={Inbox} label="Inbox" onClick={onItemClick} />
+              <SidebarItem href="/chat" icon={MessageSquare} label="AI Chat" onClick={onItemClick} />
             </SidebarSection>
 
             <SidebarSection title="Project">
@@ -127,6 +129,7 @@ export function Sidebar({
           <div className="flex flex-col items-center gap-1 px-1 py-1">
             {hydrated && [
               { href: "/dashboard", icon: Home, label: "Dashboard" },
+              { href: "/chat", icon: MessageSquare, label: "AI Chat" },
               { href: "/budget", icon: DollarSign, label: "Budget" },
               { href: "/diary", icon: BookOpen, label: "Diary" },
               { href: "/defects", icon: ShieldAlert, label: "Defects" },
